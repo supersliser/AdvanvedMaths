@@ -5,17 +5,21 @@ float f(float x) {
 	return sin(x);
 }
 
+/**
+ * Approximates the derivative of function f at point x
+ * by the formula (f(x) - f(x + delta)) / delta.
+ *
+ * @param x the point at which to compute the derivative
+ * @param delta the step size to use for the approximation
+ *
+ * @return the approximate derivative of f at x
+ */
 float df(float x, float delta) {
 	return (f(x) - f(x + delta)) / delta;
 }
 
-float F(float x, float delta) {
-	// float y = 0;
-	// for (int i = 0; i < 1000; i++) {
-	// 	y += df(x, delta);
-	// 	x += delta;
-	// }
-	return pow(x, delta);
+float F(float x) {
+	//Calculate the numerical integration of f(x) where x is a given point between 
 }
 int main(int argc, char *argv[])
 {
