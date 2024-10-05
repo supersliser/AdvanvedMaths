@@ -3,7 +3,7 @@
 
 float f(float x)
 {
-	return sin(x);
+	return x * x;
 }
 
 float df(float x, float delta)
@@ -13,7 +13,6 @@ float df(float x, float delta)
 
 float F(float x, float delta)
 {
-	printf("%f\n", x);
 	// Calculate the numerical integration of f(x)
 	float sum = 0;
 	for (float i = 0; i < x; i += delta)
@@ -40,19 +39,19 @@ int main(int argc, char *argv[])
 	SDL_SetRenderDrawColor(ren, 255, 0, 0, 255);
 	for (float x = 0; x < 1000; x += 1)
 	{
-		SDL_RenderDrawPoint(ren, x, (f(x / 100) * 100) + 500);
+		SDL_RenderDrawPoint(ren, x, (-f(x / 100) * 100) + 500);
 	}
 	// task 2 - green line
 	SDL_SetRenderDrawColor(ren, 0, 255, 0, 255);
 	for (float x = 0; x < 1000; x += 1)
 	{
-		SDL_RenderDrawPoint(ren, x, (df(x / 100, delta) * 100) + 500);
+		SDL_RenderDrawPoint(ren, x, (-df(x / 100, delta) * 100) + 500);
 	}
 	// task 3 - blue line
 	SDL_SetRenderDrawColor(ren, 0, 0, 255, 255);
 	for (float x = 0; x < 1000; x += 1)
 	{
-		SDL_RenderDrawPoint(ren, x, (F(x / 100, delta) * 100) + 500);
+		SDL_RenderDrawPoint(ren, x, (-F(x / 100, delta) * 100) + 500);
 	}
 
 	SDL_RenderPresent(ren);
