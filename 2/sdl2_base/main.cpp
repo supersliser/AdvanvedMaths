@@ -14,7 +14,7 @@ float df(float x, float delta)
 float F(float x, float delta)
 {
 	// Calculate the numerical integration of f(x)
-	float sum = 0;
+	float sum = -1;
 	for (float i = 0; i < x; i += delta)
 	{
 		sum += f(i) * delta;
@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
 	}
 	// task 3 - blue line
 	SDL_SetRenderDrawColor(ren, 0, 0, 255, 255);
-	for (float x = 0; x < 1000; x += 1)
+	for (float x = 250; x < 1250; x += 1)
 	{
-		SDL_RenderDrawPoint(ren, x, (-F(x / 100, delta) * 100) + 500);
+		SDL_RenderDrawPoint(ren, x - 250, (-F(x / 100, delta) * 100) + 500);
 	}
 
 	SDL_RenderPresent(ren);
