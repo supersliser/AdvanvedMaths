@@ -3,7 +3,7 @@
 
 float f(float x)
 {
-	return x * x;
+	return sin(x);
 }
 
 float df(float x, float delta)
