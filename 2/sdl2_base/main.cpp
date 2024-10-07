@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	{
 		printf("error initializing SDL: %s\n", SDL_GetError());
 	}
-	SDL_Window *win = SDL_CreateWindow("GAME", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1000, 1000, 0);
+	SDL_Window *win = SDL_CreateWindow("differentiation and reintegration", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1000, 1000, 0);
 	SDL_Renderer *ren = SDL_CreateRenderer(win, -1, 0);
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 
 	SDL_Surface *sectionSurface = SDL_CreateRGBSurface(0, 1000, 1000, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
 	SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
-	IMG_SaveJPG(sectionSurface, "./box.jpg", 100);
+	IMG_SaveJPG(sectionSurface, "./DifferentiationAndIntegration.jpg", 100);
 
 	return 0;
 }
