@@ -8,13 +8,14 @@ typedef struct Point
 	float z;
 };
 
-Point sphere(float u, float v, float ax, float az)
+Point sphere(float u, float v, float ax, float az, float ay)
 {
 	const float r = 1000;
 	float dr = r * cos(M_PI * (v - 0.5));
 
 	ax = ax * M_PI / 180;
 	az = az * M_PI / 180;
+	ay = ay * M_PI / 180;
 
 	Point p;
 	p.x = dr * cos(2 * M_PI * u);
@@ -25,16 +26,19 @@ Point sphere(float u, float v, float ax, float az)
 	p.z = p.y * sin(ax) + p.z * cos(ax);
 	p.x = p.x * cos(az) - p.y * sin(az);
     p.y = p.x * sin(az) + p.y * cos(az);
+		p.z = p.z * cos(ay) - p.x * sin(ay);
+    p.x = p.z * sin(ay) + p.x * cos(ay);
 	return p;
 }
 
-Point Cylinder(float u, float v, float ax, float az)
+Point Cylinder(float u, float v, float ax, float az, float ay)
 {
 	const float r = 100;
 	const float h = 1000;
 
 	ax = ax * M_PI / 180;
 	az = az * M_PI / 180;
+		ay = ay * M_PI / 180;
 
 	Point p;
 	p.x = r * cos(2 * M_PI * u);
@@ -45,16 +49,19 @@ Point Cylinder(float u, float v, float ax, float az)
 	p.z = p.y * sin(ax) + p.z * cos(ax);
 	p.x = p.x * cos(az) - p.y * sin(az);
     p.y = p.x * sin(az) + p.y * cos(az);
+		p.z = p.z * cos(ay) - p.x * sin(ay);
+    p.x = p.z * sin(ay) + p.x * cos(ay);
 	return p;
 }
 
-Point Cone(float u, float v, float ax, float az)
+Point Cone(float u, float v, float ax, float az, float ay)
 {
 	const float r = 100;
 	const float h = 1000;
 
 	ax = ax * M_PI / 180;
 	az = az * M_PI / 180;
+		ay = ay * M_PI / 180;
 
 	Point p;
 	p.x = (1 - v) * r * cos(2 * M_PI * u);
@@ -65,10 +72,12 @@ Point Cone(float u, float v, float ax, float az)
 	p.z = p.y * sin(ax) + p.z * cos(ax);
 	p.x = p.x * cos(az) - p.y * sin(az);
     p.y = p.x * sin(az) + p.y * cos(az);
+	p.z = p.z * cos(ay) - p.x * sin(ay);
+    p.x = p.z * sin(ay) + p.x * cos(ay);
 	return p;
 }
 
-void Draw(SDL_Renderer *ren, float ax, float az)
+void Draw(SDL_Renderer *ren, float ax, float az, float ay)
 {
 	const float uRes = 0.05;
 	const float vRes = 0.05;
@@ -80,7 +89,7 @@ void Draw(SDL_Renderer *ren, float ax, float az)
 			c.x = 0;
 			c.y = 0;
 			c.z = -2000;
-			Point p = Cone(u, v, ax, az);
+			Point p = Cone(u, v, ax, az, ay);
 			SDL_RenderDrawPointF(ren, (p.x / (p.z + c.z)) * 500 + 500 + c.x, (p.y / (p.z + c.z)) * 500 + 500 + c.y);
 		}
 	}
@@ -104,9 +113,10 @@ int main(int argc, char *argv[])
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
 	float ax = 0;
+	float ay = 0;
 	float az = 0;
 
-	Draw(ren, ax, az);
+	Draw(ren, ax, az, ay);
 
 	SDL_RenderPresent(ren);
 
@@ -131,28 +141,42 @@ int main(int argc, char *argv[])
 					SDL_RenderClear(ren);
 					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 					ax += 5;
-					Draw(ren, ax, az);
+					Draw(ren, ax, az, ay);
 					break;
 				case SDLK_s:
 					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 					SDL_RenderClear(ren);
 					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 					ax -= 5;
-					Draw(ren, ax, az);
+					Draw(ren, ax, az, ay);
 					break;
-									case SDLK_a:
+				case SDLK_q:
 					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 					SDL_RenderClear(ren);
 					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 					az += 5;
-					Draw(ren, ax, az);
+					Draw(ren, ax, az, ay);
+					break;
+				case SDLK_e:
+					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+					SDL_RenderClear(ren);
+					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+					az -= 5;
+					Draw(ren, ax, az, ay);
+					break;
+				case SDLK_a:
+					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+					SDL_RenderClear(ren);
+					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+					ay -= 5;
+					Draw(ren, ax, az, ay);
 					break;
 				case SDLK_d:
 					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 					SDL_RenderClear(ren);
 					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					az -= 5;
-					Draw(ren, ax, az);
+					ay -= 5;
+					Draw(ren, ax, az, ay);
 					break;
 				}
 				SDL_RenderPresent(ren);
