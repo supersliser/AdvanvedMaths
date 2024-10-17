@@ -25,9 +25,9 @@ Point sphere(float u, float v, float ax, float az, float ay)
 	p.y = p.y * cos(ax) - p.z * sin(ax);
 	p.z = p.y * sin(ax) + p.z * cos(ax);
 	p.x = p.x * cos(az) - p.y * sin(az);
-    p.y = p.x * sin(az) + p.y * cos(az);
-		p.z = p.z * cos(ay) - p.x * sin(ay);
-    p.x = p.z * sin(ay) + p.x * cos(ay);
+	p.y = p.x * sin(az) + p.y * cos(az);
+	p.z = p.z * cos(ay) - p.x * sin(ay);
+	p.x = p.z * sin(ay) + p.x * cos(ay);
 	return p;
 }
 
@@ -38,7 +38,7 @@ Point Cylinder(float u, float v, float ax, float az, float ay)
 
 	ax = ax * M_PI / 180;
 	az = az * M_PI / 180;
-		ay = ay * M_PI / 180;
+	ay = ay * M_PI / 180;
 
 	Point p;
 	p.x = r * cos(2 * M_PI * u);
@@ -48,9 +48,9 @@ Point Cylinder(float u, float v, float ax, float az, float ay)
 	p.y = p.y * cos(ax) - p.z * sin(ax);
 	p.z = p.y * sin(ax) + p.z * cos(ax);
 	p.x = p.x * cos(az) - p.y * sin(az);
-    p.y = p.x * sin(az) + p.y * cos(az);
-		p.z = p.z * cos(ay) - p.x * sin(ay);
-    p.x = p.z * sin(ay) + p.x * cos(ay);
+	p.y = p.x * sin(az) + p.y * cos(az);
+	p.z = p.z * cos(ay) - p.x * sin(ay);
+	p.x = p.z * sin(ay) + p.x * cos(ay);
 	return p;
 }
 
@@ -61,7 +61,7 @@ Point Cone(float u, float v, float ax, float az, float ay)
 
 	ax = ax * M_PI / 180;
 	az = az * M_PI / 180;
-		ay = ay * M_PI / 180;
+	ay = ay * M_PI / 180;
 
 	Point p;
 	p.x = (1 - v) * r * cos(2 * M_PI * u);
@@ -71,28 +71,58 @@ Point Cone(float u, float v, float ax, float az, float ay)
 	p.y = p.y * cos(ax) - p.z * sin(ax);
 	p.z = p.y * sin(ax) + p.z * cos(ax);
 	p.x = p.x * cos(az) - p.y * sin(az);
-    p.y = p.x * sin(az) + p.y * cos(az);
+	p.y = p.x * sin(az) + p.y * cos(az);
 	p.z = p.z * cos(ay) - p.x * sin(ay);
-    p.x = p.z * sin(ay) + p.x * cos(ay);
+	p.x = p.z * sin(ay) + p.x * cos(ay);
 	return p;
 }
 
-void Draw(SDL_Renderer *ren, float ax, float az, float ay)
+void Draw(SDL_Renderer *ren, Point cp, char obj, Point cr)
 {
+	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+	SDL_RenderClear(ren);
+	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 	const float uRes = 0.05;
 	const float vRes = 0.05;
+
+	cp.x += cr.x;
+	cp.y += cr.y;
+	cp.z += cr.z;
 	for (float u = 0; u < 1; u += uRes)
 	{
 		for (float v = 0; v < 1; v += vRes)
 		{
-			Point c;
-			c.x = 0;
-			c.y = 0;
-			c.z = -2000;
-			Point p = Cone(u, v, ax, az, ay);
-			SDL_RenderDrawPointF(ren, (p.x / (p.z + c.z)) * 500 + 500 + c.x, (p.y / (p.z + c.z)) * 500 + 500 + c.y);
+			Point p;
+			switch (obj)
+			{
+			case 0:
+				p = Cone(u, v, 0, 0, 0);
+				break;
+			case 1:
+				p = sphere(u, v, 0, 0, 0);
+				break;
+			case 2:
+				p = Cylinder(u, v, 0, 0, 0);
+				break;
+			}
+			if (p.z > cp.z) {
+				SDL_RenderDrawPointF(ren, (p.x / (p.z + cp.z)) * 500 + 500 + cp.x, (p.y / (p.z + cp.z)) * 500 + 500 + cp.y);
+			}
 		}
 	}
+	SDL_RenderPresent(ren);
+}
+
+Point setCRot(float ax, float ay, float az, Point c)
+{
+	Point o = c;
+	o.y = o.y * cos(ax) - o.z * sin(ax);
+	o.z = o.y * sin(ax) + o.z * cos(ax);
+	o.x = o.x * cos(az) - o.y * sin(az);
+	o.y = o.x * sin(az) + o.y * cos(az);
+	o.z = o.z * cos(ay) - o.x * sin(ay);
+	o.x = o.z * sin(ay) + o.x * cos(ay);
+	return o;
 }
 
 int main(int argc, char *argv[])
@@ -112,13 +142,23 @@ int main(int argc, char *argv[])
 	SDL_RenderClear(ren);
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
+	// SDL_ShowCursor(SDL_DISABLE);
+
+	int obj = 0;
+
 	float ax = 0;
 	float ay = 0;
 	float az = 0;
+	Point Cp;
+	Point Cr;
+	Cp.z = -2000;
+	Cr.x = 0;
+	Cr.y = 0;
+	Cr.z = 0;
+	Draw(ren, Cp, obj, Cr);
 
-	Draw(ren, ax, az, ay);
-
-	SDL_RenderPresent(ren);
+	const float MOV = 20;
+	const float SEN = 1;
 
 	char finished = 0;
 	// the main event loop
@@ -129,6 +169,16 @@ int main(int argc, char *argv[])
 		{
 			switch (event.type)
 			{
+			case SDL_MOUSEMOTION:
+				ay += event.motion.xrel * SEN;
+				ax += event.motion.yrel * SEN;
+				Cr = setCRot(ax, ay, az, Cr);
+				// printf("%d\n", event.motion.xrel);
+				// printf("%d\n", event.motion.yrel);
+				// printf("(%f, %f, %f)\n", Cp.x, Cp.y, Cp.z);
+				// printf("(%f, %f, %f)\n", Cr.x, Cr.y, Cr.z);
+				Draw(ren, Cp, obj, Cr);
+				break;
 			case SDL_KEYDOWN:
 
 				switch (event.key.keysym.sym)
@@ -137,49 +187,35 @@ int main(int argc, char *argv[])
 					finished = 1;
 					break;
 				case SDLK_w:
-					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-					SDL_RenderClear(ren);
-					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					ax += 5;
-					Draw(ren, ax, az, ay);
+					Cp.z += MOV;
 					break;
 				case SDLK_s:
-					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-					SDL_RenderClear(ren);
-					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					ax -= 5;
-					Draw(ren, ax, az, ay);
+					Cp.z -= MOV;
 					break;
-				case SDLK_q:
-					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-					SDL_RenderClear(ren);
-					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					az += 5;
-					Draw(ren, ax, az, ay);
+				case SDLK_SPACE:
+					Cp.y += MOV;
 					break;
-				case SDLK_e:
-					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-					SDL_RenderClear(ren);
-					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					az -= 5;
-					Draw(ren, ax, az, ay);
+				case SDLK_LCTRL:
+				case SDLK_RCTRL:
+					Cp.y -= MOV;
 					break;
 				case SDLK_a:
-					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-					SDL_RenderClear(ren);
-					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					ay -= 5;
-					Draw(ren, ax, az, ay);
+					Cp.x += MOV;
 					break;
 				case SDLK_d:
-					SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-					SDL_RenderClear(ren);
-					SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
-					ay -= 5;
-					Draw(ren, ax, az, ay);
+					Cp.x -= MOV;
+					break;
+				case SDLK_0:
+					obj = 0;
+					break;
+				case SDLK_1:
+					obj = 1;
+					break;
+				case SDLK_2:
+					obj = 2;
 					break;
 				}
-				SDL_RenderPresent(ren);
+				Draw(ren, Cp, obj, Cr);
 				break;
 			case SDL_QUIT:
 				finished = 1;
