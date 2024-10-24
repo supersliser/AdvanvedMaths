@@ -114,62 +114,68 @@ hit traceObj(point src, vec dir, sphere obj)
 	return out;
 }
 
-vec getNormal(point P, sphere obj)
+vec Normalise(vec v)
+{
+	float length = sqrt(dp(v, v));
+	v.x /= length;
+	v.y /= length;
+	v.z /= length;
+	return v;
+}
+
+float getNormal(point P, sphere obj, vec cDir)
 {
 	vec N;
-	N.x = (P.x - obj.pos.x);
-	N.y = (P.y - obj.pos.y);
-	N.z = (P.z - obj.pos.z);
-	float length = sqrt(N.x * N.x + N.y * N.y + N.z * N.z);
-	N.x /= length;
-	N.y /= length;
-	N.z /= length;
-	return N;
+	N.x = (obj.pos.x - P.x);
+	N.y = (obj.pos.x - P.y);
+	N.z = (obj.pos.z - P.z);
+	return dp(Normalise(N), cDir);
 }
 
 void draw(SDL_Renderer *ren, cam c, sphere *objs, int objCount)
 {
-	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 	for (int x = 0; x < 1000; x++)
 	{
 		for (int y = 0; y < 1000; y++)
 		{
 			point o;
-			o.x = x + ((c.pos.x - 500) * 2);
-			o.y = y + ((c.pos.y - 500) * 2);
+			o.x = x + c.pos.x - 500;
+			o.y = y + c.pos.y - 500;
 			o.z = c.pos.z;
+			vec d;
+			d.x = (x - 1000) / 1000;
+			d.y = (y - 1000) / 1000;
+			d.z = 1;
+			// printf("(%f, %f, %f)\n", d.x, d.y, d.z);
 			hit bestHit;
 			bestHit.hit = 0;
-			bestHit.dist = 1000000000;
+			bestHit.dist = 100000000;
 			for (int i = 0; i < objCount; i++)
 			{
-				hit h = traceObj(o, c.dir, objs[i]);
-				if (h.hit)
+				if (objs[i].pos.z > c.pos.z)
 				{
-					if (h.dist < bestHit.dist)
+
+					hit h = traceObj(o, d, objs[i]);
+					if (h.hit)
 					{
-						bestHit = h;
+						if (h.dist < bestHit.dist)
+						{
+							bestHit = h;
+						}
 					}
 				}
 			}
-			if (bestHit.hit){
-					vec normal = getNormal(bestHit.P, bestHit.obj);
-					vec viewDir;
-					viewDir.x = c.pos.x - bestHit.P.x;
-					viewDir.y = c.pos.y - bestHit.P.y;
-					viewDir.z = c.pos.z - bestHit.P.z;
-					float length = sqrt(viewDir.x * viewDir.x + viewDir.y * viewDir.y + viewDir.z * viewDir.z);
-					viewDir.x /= length;
-					viewDir.y /= length;
-					viewDir.z /= length;
-					float dotProduct = normal.x * viewDir.x + normal.y * viewDir.y + normal.z * viewDir.z;
-					SDL_SetRenderDrawColor(ren, bestHit.obj.col.r * 255 * dotProduct, bestHit.obj.col.g * 255 * dotProduct, bestHit.obj.col.b * 255 * dotProduct, 255);
-					SDL_RenderDrawPoint(ren, x, y);
+			if (bestHit.hit)
+			{
+				float normalM = getNormal(bestHit.P, bestHit.obj, d);
+				SDL_SetRenderDrawColor(ren, floor(bestHit.obj.col.r * 255) * normalM, floor(bestHit.obj.col.g * 255) * normalM, floor(bestHit.obj.col.b * 255) * normalM, 255);
+				SDL_RenderDrawPoint(ren, x, y);
 			}
 		}
 	}
-			SDL_RenderPresent(ren);
+	SDL_RenderPresent(ren);
 }
 int main(int argc, char *argv[])
 {
@@ -185,62 +191,51 @@ int main(int argc, char *argv[])
 									   1000, 1000, 0);
 
 	SDL_Renderer *ren = SDL_CreateRenderer(win, -1, 0);
-	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
+	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 
 	const int MOVE = 10;
 	cam c;
-	c.pos.x = 200;
-	c.pos.y = 300;
-	c.pos.z = -1000;
+	c.pos.x = 0;
+	c.pos.y = 0;
+	c.pos.z = -2000;
 	c.dir.x = 0;
 	c.dir.y = 0;
 	c.dir.z = 1;
 
-	sphere *objs = (sphere *)malloc(sizeof(sphere) * 4);
-	objs[0].pos.x = 300;
-	objs[0].pos.y = 200;
+	sphere *objs = (sphere *)malloc(sizeof(sphere) * 20);
+	objs[0].pos.x = 0;
+	objs[0].pos.y = 0;
 	objs[0].pos.z = 0;
 	objs[0].col.r = 1;
 	objs[0].col.g = 0;
-	objs[0].col.b = 1;
-	objs[0].r = 100;
-	objs[1].pos.x = -300;
+	objs[0].col.b = 0;
+	objs[0].r = 200;
+	objs[1].pos.x = -200;
 	objs[1].pos.y = 0;
-	objs[1].pos.z = 0;
+	objs[1].pos.z = 500;
 	objs[1].col.r = 1;
 	objs[1].col.g = 0;
 	objs[1].col.b = 1;
 	objs[1].r = 100;
-	objs[2].pos.x = 300;
-	objs[2].pos.y = 200;
-	objs[2].pos.z = 0;
-	objs[2].col.r = 1;
-	objs[2].col.g = 0;
-	objs[2].col.b = 0;
-	objs[2].r = 25;
-	objs[3].pos.x = -300;
-	objs[3].pos.y = 0;
-	objs[3].pos.z = -50;
-	objs[3].col.r = 1;
-	objs[3].col.g = 0.5;
-	objs[3].col.b = 1;
-	objs[3].r = 300;
 
-	sortObjects(objs, 4);
+	sortObjects(objs, 2);
 
-	draw(ren, c, objs, 4);
-	// for (int i = 1; i < 20; i++){
-	// 	objs[i].pos.x = (rand() * 500) - 500;
-	// 	objs[i].pos.y = (rand() * 500) - 500;
-	// 	objs[i].pos.z = (rand() * 500) - 500;
-	// 	objs[i].col.r = 1;
-	// 	objs[i].col.g = 0;
-	// 	objs[i].col.b = 1;
-	// 	objs[i].r = 100;
-	// 	draw(ren, c, objs, i+1);
-	// 		printf("draw %d object\n", i+1);
-	// }
+	draw(ren, c, objs, 2);
+	for (int i = 2; i < 20; i++)
+	{
+		objs[i].pos.x = (rand() % 2000) - 500;
+		objs[i].pos.y = (rand() % 2000) - 500;
+		objs[i].pos.z = (rand() % 2000) - 1000;
+		objs[i].col.r = ((float)(rand() % 155) + 100) / 255;
+		objs[i].col.g = ((float)(rand() % 155) + 100) / 255;
+		objs[i].col.b = ((float)(rand() % 155) + 100) / 255;
+		objs[i].r = (rand() % 100) + 50;
+		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
+		draw(ren, c, objs, i + 1);
+		// printf("draw %d object\n", i + 1);
+	}
+	sortObjects(objs, 20);
 
 	char finished = 0;
 	// the main event loop
@@ -276,7 +271,7 @@ int main(int argc, char *argv[])
 					finished = 1;
 					break;
 				}
-				draw(ren, c, objs, 4);
+				draw(ren, c, objs, 20);
 				break;
 
 			case SDL_QUIT:
