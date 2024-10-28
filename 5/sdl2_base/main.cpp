@@ -37,6 +37,9 @@ typedef struct cam
 {
 	point pos;
 	vec dir;
+	float fov;
+	float nearClip;
+	float farClip;
 } cam;
 
 float dp(point p1, vec p2)
@@ -136,25 +139,28 @@ void draw(SDL_Renderer *ren, cam c, sphere *objs, int objCount)
 {
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
-	for (int x = 0; x < 1000; x++)
+
+	for (int x = -500; x < 500; x++)
 	{
-		for (int y = 0; y < 1000; y++)
+		for (int y = -500; y < 500; y++)
 		{
 			point o;
-			o.x = x + c.pos.x - 500;
-			o.y = y + c.pos.y - 500;
+
+			o.x = x + c.pos.x;
+			o.y = y + c.pos.y;
 			o.z = c.pos.z;
 			vec d;
-			d.x = (x - 1000) / 1000;
-			d.y = (y - 1000) / 1000;
-			d.z = 1;
+			d.x = (x) * (c.fov / 90);
+			d.y = (y) * (c.fov / 90);
+			d.z = 1000 * (c.fov / 90);
+			d = Normalise(d);
 			// printf("(%f, %f, %f)\n", d.x, d.y, d.z);
 			hit bestHit;
 			bestHit.hit = 0;
 			bestHit.dist = 100000000;
 			for (int i = 0; i < objCount; i++)
 			{
-				if (objs[i].pos.z > c.pos.z)
+				if (objs[i].pos.z > c.pos.z + c.nearClip && objs[i].pos.z < c.pos.z + c.farClip)
 				{
 
 					hit h = traceObj(o, d, objs[i]);
@@ -171,7 +177,7 @@ void draw(SDL_Renderer *ren, cam c, sphere *objs, int objCount)
 			{
 				float normalM = getNormal(bestHit.P, bestHit.obj, d);
 				SDL_SetRenderDrawColor(ren, floor(bestHit.obj.col.r * 255) * normalM, floor(bestHit.obj.col.g * 255) * normalM, floor(bestHit.obj.col.b * 255) * normalM, 255);
-				SDL_RenderDrawPoint(ren, x, y);
+				SDL_RenderDrawPoint(ren, x + 500, y + 500);
 			}
 		}
 	}
@@ -198,10 +204,13 @@ int main(int argc, char *argv[])
 	cam c;
 	c.pos.x = 0;
 	c.pos.y = 0;
-	c.pos.z = -2000;
+	c.pos.z = -200;
 	c.dir.x = 0;
 	c.dir.y = 0;
 	c.dir.z = 1;
+	c.fov = -70;
+	c.nearClip = 1;
+	c.farClip = 1000;
 
 	sphere *objs = (sphere *)malloc(sizeof(sphere) * 20);
 	objs[0].pos.x = 0;
@@ -232,11 +241,10 @@ int main(int argc, char *argv[])
 		objs[i].col.b = ((float)(rand() % 155) + 100) / 255;
 		objs[i].r = (rand() % 100) + 50;
 		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
-		draw(ren, c, objs, i + 1);
 		// printf("draw %d object\n", i + 1);
 	}
 	sortObjects(objs, 20);
-
+	draw(ren, c, objs, 20);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -269,6 +277,12 @@ int main(int argc, char *argv[])
 					break;
 				case SDLK_ESCAPE:
 					finished = 1;
+					break;
+				case SDLK_LEFTBRACKET:
+					c.fov -= 10;
+					break;
+				case SDLK_RIGHTBRACKET:
+					c.fov += 10;
 					break;
 				}
 				draw(ren, c, objs, 20);
