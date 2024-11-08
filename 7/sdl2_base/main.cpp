@@ -63,12 +63,11 @@ float dp(vec p1, vec p2)
 class spline
 {
 protected:
-	point *points;
-	// row then column
 	int pointSize;
 
 public:
 	color col;
+	point *points;
 
 	spline()
 	{
@@ -77,21 +76,17 @@ public:
 	point calculatePoint(float t)
 	{
 		point P;
-		// Calculate the coefficients of the Bezier basis functions
-		float t_powers[4] = {1, t, t * t, t * t * t};
-
-		// Matrix multiplication
-		P.x = 0;
-		P.y = 0;
-		P.z = 0;
-		// printf("pointSize: %d\n", pointSize);
-		for (int j = 0; j < pointSize; ++j)
-		{
-			// printf("(%f, %f, %f)\n", points[j].x, points[j].y, points[j].z);
-			P.x += points[j].x * t_powers[j];
-			P.y += points[j].y * t_powers[j];
-			P.z += points[j].z * t_powers[j];
-			// printf("(%f, %f, %f)\n", P.x, P.y, P.z);
+		if (pointSize == 3)
+		{ // quadratic Bezier curve
+			P.x = (1 - t) * (1 - t) * points[0].x + 2 * (1 - t) * t * points[1].x + t * t * points[2].x;
+			P.y = (1 - t) * (1 - t) * points[0].y + 2 * (1 - t) * t * points[1].y + t * t * points[2].y;
+			P.z = (1 - t) * (1 - t) * points[0].z + 2 * (1 - t) * t * points[1].z + t * t * points[2].z;
+		}
+		else if (pointSize == 4)
+		{ // cubic Bezier curve
+			P.x = (1 - t) * (1 - t) * (1 - t) * points[0].x + 3 * (1 - t) * (1 - t) * t * points[1].x + 3 * (1 - t) * t * t * points[2].x + t * t * t * points[3].x;
+			P.y = (1 - t) * (1 - t) * (1 - t) * points[0].y + 3 * (1 - t) * (1 - t) * t * points[1].y + 3 * (1 - t) * t * t * points[2].y + t * t * t * points[3].y;
+			P.z = (1 - t) * (1 - t) * (1 - t) * points[0].z + 3 * (1 - t) * (1 - t) * t * points[1].z + 3 * (1 - t) * t * t * points[2].z + t * t * t * points[3].z;
 		}
 		return P;
 	}
@@ -117,6 +112,29 @@ public:
 		h.hit = false;
 		return h;
 	}
+	void draw(SDL_Renderer *ren)
+	{
+		SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
+		SDL_RenderClear(ren);
+		for (float i = 0; i < 1; i += 0.001)
+		{
+			point p = calculatePoint(i);
+			SDL_SetRenderDrawColor(ren, col.r * 255, col.g * 255, col.b * 255, 255);
+			SDL_RenderDrawPoint(ren, p.x + 500, p.y + 500);
+			// printf("p: %f, %f\n", p.x, p.y);
+		}
+		for (int i = 0; i < pointSize; i++)
+		{
+			SDL_Rect rect;
+			rect.x = points[i].x + 500 - 10;
+			rect.y = points[i].y + 500 - 10;
+			rect.w = 20;
+			rect.h = 20;
+			SDL_SetRenderDrawColor(ren, 255, 255, 0, 255);
+			SDL_RenderFillRect(ren, &rect);
+		}
+		SDL_RenderPresent(ren);
+	}
 };
 
 class quadraticSpline : public spline
@@ -133,10 +151,10 @@ public:
 	}
 };
 
-class cubicSpline : spline
+class cubicSpline : public spline
 {
 public:
-	cubicSpline(point *p)
+	cubicSpline(point *p, color col)
 	{
 		points = (point *)calloc(4, sizeof(point));
 		pointSize = 4;
@@ -197,7 +215,7 @@ void draw(SDL_Renderer *ren, cam c, spline *s, int objCount)
 				{
 					// printf("%d\n", i);
 					// float normalM = getNormal(h.P, h.obj, d);
-					SDL_SetRenderDrawColor(ren,h.obj.r * 255, h.obj.g * 255, h.obj.b * 255, 255);
+					SDL_SetRenderDrawColor(ren, h.obj.r * 255, h.obj.g * 255, h.obj.b * 255, 255);
 					SDL_RenderDrawPoint(ren, x + 500, y + 500);
 					break;
 				}
@@ -226,42 +244,42 @@ int main(int argc, char *argv[])
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 
-	const int MOVE = 10;
-	cam c;
-	c.pos.x = 0;
-	c.pos.y = 0;
-	c.pos.z = -10;
-	c.dir.x = 0;
-	c.dir.y = 0;
-	c.dir.z = 1;
-	c.fov = 20;
-	c.nearClip = 1;
-	c.farClip = 1000000;
-	c.orthographic = true;
+	// const int MOVE = 10;
+	// cam c;
+	// c.pos.x = 0;
+	// c.pos.y = 0;
+	// c.pos.z = -10;
+	// c.dir.x = 0;
+	// c.dir.y = 0;
+	// c.dir.z = 1;
+	// c.fov = 20;
+	// c.nearClip = 1;
+	// c.farClip = 1000000;
+	// c.orthographic = true;
 
-	int objectCount = 1;
+	// int objectCount = 1;
 
-	spline *objs = (spline *)malloc(objectCount * sizeof(spline));
-	point p[3];
-	p[0].x = 0;
+	// spline *objs = (spline *)malloc(objectCount * sizeof(spline));
+	point p[4];
+	p[0].x = -400;
 	p[0].y = 0;
-	p[0].z = 50;
-	p[1].x = 1000;
+	p[1].x = 400;
 	p[1].y = 0;
-	p[1].z = 0;
 	p[2].x = 0;
-	p[2].y = 1000;
-	p[2].z = 0;
+	p[2].y = 400;
+
+	p[3].x = -300;
+	p[3].y = 0;
 	color c1;
 	c1.r = 1;
 	c1.g = 0;
 	c1.b = 0;
-	objs[0] = quadraticSpline(p, c1);
-
-
-	draw(ren, c, objs, objectCount);
+	spline obj = cubicSpline(p, c1);
+	obj.draw(ren);
+	// draw(ren, c, objs, objectCount);
 	char finished = 0;
 	// the main event loop
+	int selected = -1;
 	while (!finished)
 	{
 		SDL_Event event;
@@ -269,42 +287,70 @@ int main(int argc, char *argv[])
 		{
 			switch (event.type)
 			{
-			case SDL_KEYDOWN:
-				switch (event.key.keysym.sym)
+			case SDL_MOUSEBUTTONDOWN:
+			{
+				if (event.button.button == SDL_BUTTON_LEFT)
 				{
-				case SDLK_w:
-					c.pos.z += MOVE;
-					break;
-				case SDLK_a:
-					c.pos.x -= MOVE;
-					break;
-				case SDLK_s:
-					c.pos.z -= MOVE;
-					break;
-				case SDLK_d:
-					c.pos.x += MOVE;
-					break;
-				case SDLK_SPACE:
-					c.pos.y -= MOVE;
-					break;
-				case SDLK_LSHIFT:
-					c.pos.y += MOVE;
-					break;
-				case SDLK_ESCAPE:
-					finished = 1;
-					break;
-				case SDLK_LEFTBRACKET:
-					c.fov -= 10;
-					break;
-				case SDLK_RIGHTBRACKET:
-					c.fov += 10;
-					break;
-				case SDLK_p:
-					c.orthographic = !c.orthographic;
-					break;
+					selected = -1;
+					for (int i = 0; i < 4; i++)
+					{
+						if (event.button.x > obj.points[i].x + 500 - 10 && event.button.x < obj.points[i].x + 500 + 10 && event.button.y > obj.points[i].y + 500 - 10 && event.button.y < obj.points[i].y + 500 + 10)
+						{
+							selected = i;
+							break;
+						}
+					}
 				}
-				draw(ren, c, objs, objectCount);
-				break;
+			}
+			break;
+			case SDL_MOUSEBUTTONUP:
+			{
+				selected = -1;
+			}
+			break;
+			case SDL_MOUSEMOTION:
+			{
+				obj.points[selected].x = event.motion.x - 500;
+				obj.points[selected].y = event.motion.y - 500;
+				obj.draw(ren);
+			}
+			break;
+				// case SDL_KEYDOWN:
+				// switch (event.key.keysym.sym)
+				// {
+				// case SDLK_w:
+				// 	c.pos.z += MOVE;
+				// 	break;
+				// case SDLK_a:
+				// 	c.pos.x -= MOVE;
+				// 	break;
+				// case SDLK_s:
+				// 	c.pos.z -= MOVE;
+				// 	break;
+				// case SDLK_d:
+				// 	c.pos.x += MOVE;
+				// 	break;
+				// case SDLK_SPACE:
+				// 	c.pos.y -= MOVE;
+				// 	break;
+				// case SDLK_LSHIFT:
+				// 	c.pos.y += MOVE;
+				// 	break;
+				// case SDLK_ESCAPE:
+				// 	finished = 1;
+				// 	break;
+				// case SDLK_LEFTBRACKET:
+				// 	c.fov -= 10;
+				// 	break;
+				// case SDLK_RIGHTBRACKET:
+				// 	c.fov += 10;
+				// 	break;
+				// case SDLK_p:
+				// 	c.orthographic = !c.orthographic;
+				// 	break;
+				// }
+				// draw(ren, c, objs, objectCount);
+				// break;
 
 			case SDL_QUIT:
 				finished = 1;
