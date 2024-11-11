@@ -94,7 +94,7 @@ public:
 	hit testHit(point p, vec dir)
 	{
 		hit h;
-		for (float i = 0; i < 1; i += 0.001)
+		for (float i = 0; i < 1; i += 0.0001)
 		{
 			point temp = calculatePoint(i);
 			// printf("(%f, %f, %f)\n", temp.x, temp.y, temp.z);
