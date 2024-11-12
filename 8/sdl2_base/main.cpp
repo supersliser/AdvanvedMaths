@@ -19,6 +19,61 @@ typedef struct color
 	float r;
 	float g;
 	float b;
+
+	vec toVec() {
+		vec o;
+		o.x = r;
+		o.y = g;
+		o.z = b;
+	}
+
+	void toCol(vec i) {
+		r = i.x;
+		g = i.y;
+		b = i.z;
+	}
+
+	void normaliseF() {
+		if (r > 1) {
+			r = 1;
+		}
+		if (r < 0) {
+			r = 0;
+		}
+				if (g > 1) {
+			g = 1;
+		}
+		if (g < 0) {
+			g = 0;
+		}
+				if (b > 1) {
+			b = 1;
+		}
+		if (b < 0) {
+			b = 0;
+		}
+	}
+
+	void normalise255() {
+				if (r > 255) {
+			r = 255;
+		}
+		if (r < 0) {
+			r = 0;
+		}
+				if (g > 255) {
+			g = 255;
+		}
+		if (g < 0) {
+			g = 0;
+		}
+				if (b > 255) {
+			b = 255;
+		}
+		if (b < 0) {
+			b = 0;
+		}
+	}
 } color;
 typedef struct sphere
 {
@@ -160,18 +215,19 @@ vec Normalise(vec v)
 vec getNormal(point P, sphere obj, vec cDir)
 {
 	vec N;
-	N.x = (obj.pos.x - P.x) / 1000;
-	N.y = (obj.pos.x - P.y) / 1000;
-	N.z = (obj.pos.z - P.z) / 1000;
+	N.x = -(obj.pos.x - P.x);
+	N.y = -(obj.pos.x - P.y);
+	N.z = -(obj.pos.z - P.z);
+	N = Normalise(N);
 	return N;
 }
 
-color cp(color a, color b)
+vec cp(vec a, vec b)
 {
-	color result;
-	result.r = a.g * b.b - a.b * b.g;
-	result.g = a.b * b.r - a.r * b.b;
-	result.b = a.r * b.g - a.g * b.r;
+	vec result;
+	result.x = a.y * b.z - a.z * b.y;
+	result.y = a.z * b.x - a.x * b.z;
+	result.z = a.x * b.y - a.y * b.x;
 	return result;
 }
 
@@ -190,6 +246,17 @@ color shade(cam c, light l, hit h, float roughness)
 	incident.r = l.col.r * l.brightness / dpl;
 	incident.g = l.col.g * l.brightness / dpl;
 	incident.b = l.col.b * l.brightness / dpl;
+	// incident.toCol(Normalise(incident.toVec()));
+	if (incident.r > 255) {
+		incident.r = 255;
+	}
+	if (incident.g > 255) {
+		incident.g = 255;
+	}
+	if (incident.b > 255) {
+		incident.b = 255;
+	}
+	// printf("(%f, %f, %f)\n", incident.r, incident.g, incident.b);
 	vec H;
 	// H.x = (c.dir.x + lDir.x) / 2;
 	// H.y = (c.dir.y + lDir.y) / 2;
@@ -202,7 +269,12 @@ color shade(cam c, light l, hit h, float roughness)
 	reflectivity.g = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.g;
 	reflectivity.b = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.b;
 	// printf("(%f, %f, %f)\n", reflectivity.r, reflectivity.g, reflectivity.b);
-	color reflectedLight = cp(incident, reflectivity);
+	color reflectedLight;
+	reflectedLight.toCol(cp(incident.toVec(), reflectivity.toVec()));
+	reflectedLight.r = incident.r * reflectivity.r;
+	reflectedLight.g = incident.g * reflectivity.g;
+	reflectedLight.b = incident.b * reflectivity.b;
+	reflectedLight.normalise255();
 	return reflectedLight;
 }
 
@@ -246,8 +318,8 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 					newC.dir = d;
 					newC.pos = o;
 					color s = shade(newC, l, h, 1);
-					printf("(%f, %f, %f)\n", s.r, s.g, s.b);
-					SDL_SetRenderDrawColor(ren, floor(s.r * 255), floor(s.g * 255), floor(s.b * 255), 255);
+					// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
+					SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
 					SDL_RenderDrawPoint(ren, x + 500, y + 500);
 					break;
 				}
@@ -280,7 +352,7 @@ int main(int argc, char *argv[])
 	cam c;
 	c.pos.x = 0;
 	c.pos.y = 0;
-	c.pos.z = -200;
+	c.pos.z = -100;
 	c.dir.x = 0;
 	c.dir.y = 0;
 	c.dir.z = 1;
@@ -290,25 +362,25 @@ int main(int argc, char *argv[])
 	c.orthographic = false;
 
 	light l;
-	l.brightness = 1;
+	l.brightness = 10000;
 	l.col.r = 1;
-	l.col.g = 0;
-	l.col.b = 0;
+	l.col.g = 1;
+	l.col.b = 1;
 	l.pos.x = 100;
 	l.pos.y = 100;
 	l.pos.z = 100;
 
-	int objectCount = 2;
+	int objectCount = 10;
 
 	sphere *temp = (sphere *)malloc(sizeof(sphere) * objectCount);
 
-	temp[0].pos.x = 0;
-	temp[0].pos.y = 0;
-	temp[0].pos.z = 100;
-	temp[0].col.r = 1;
-	temp[0].col.g = 0;
-	temp[0].col.b = 0;
-	temp[0].r = 200;
+	// temp[0].pos.x = 0;
+	// temp[0].pos.y = 0;
+	// temp[0].pos.z = 100;
+	// temp[0].col.r = 1;
+	// temp[0].col.g = 0;
+	// temp[0].col.b = 0;
+	// temp[0].r = 200;
 	temp[1].pos.x = -200;
 	temp[1].pos.y = 0;
 	temp[1].pos.z = 100;
@@ -317,18 +389,18 @@ int main(int argc, char *argv[])
 	temp[1].col.b = 1;
 	temp[1].r = 100;
 
-	// for (int i = 2; i < objectCount; i++)
-	// {
-	// 	temp[i].pos.x = (rand() % 2000) - 500;
-	// 	temp[i].pos.y = (rand() % 2000) - 500;
-	// 	temp[i].pos.z = (rand() % 2000) - 1000;
-	// 	temp[i].col.r = ((float)(rand() % 155) + 100) / 255;
-	// 	temp[i].col.g = ((float)(rand() % 155) + 100) / 255;
-	// 	temp[i].col.b = ((float)(rand() % 155) + 100) / 255;
-	// 	temp[i].r = (rand() % 100) + 50;
-	// 	// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
-	// 	// printf("draw %d object\n", i + 1);
-	// }
+	for (int i = 2; i < objectCount; i++)
+	{
+		temp[i].pos.x = (rand() % 2000) - 500;
+		temp[i].pos.y = (rand() % 2000) - 500;
+		temp[i].pos.z = (rand() % 2000) - 1000;
+		temp[i].col.r = ((float)(rand() % 155) + 100) / 255;
+		temp[i].col.g = ((float)(rand() % 155) + 100) / 255;
+		temp[i].col.b = ((float)(rand() % 155) + 100) / 255;
+		temp[i].r = (rand() % 100) + 50;
+		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
+		// printf("draw %d object\n", i + 1);
+	}
 	sphere **objs = &temp;
 	draw(ren, c,l, *objs, objectCount);
 	char finished = 0;
