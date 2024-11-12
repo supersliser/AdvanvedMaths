@@ -43,7 +43,8 @@ typedef struct cam
 	bool orthographic;
 } cam;
 
-typedef struct light {
+typedef struct light
+{
 	point pos;
 	color col;
 	float brightness;
@@ -66,28 +67,30 @@ float dp(vec p1, vec p2)
 	return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 
-void sortObjects(sphere *objs, int* objCount, cam* c)
+void sortObjects(sphere *objs, int *objCount, cam *c)
 {
-	int* toDelete = (int*)calloc(0, sizeof(int));
+	int *toDelete = (int *)calloc(0, sizeof(int));
 	int toDeleteSize = 0;
-	for (int i = 0; i < *objCount; i++) {
-		if (objs[i].pos.z - objs[i].r < (*c).pos.z + (*c).nearClip && objs[i].pos.z - objs[i].r > (*c).pos.z + (*c).farClip) {
+	for (int i = 0; i < *objCount; i++)
+	{
+		if (objs[i].pos.z - objs[i].r < (*c).pos.z + (*c).nearClip && objs[i].pos.z - objs[i].r > (*c).pos.z + (*c).farClip)
+		{
 			toDeleteSize++;
-			toDelete = (int*)realloc(toDelete, toDeleteSize * sizeof(int));
+			toDelete = (int *)realloc(toDelete, toDeleteSize * sizeof(int));
 			toDelete[toDeleteSize - 1] = i;
-
 		}
 	}
 
-	for (int i = 0; i < toDeleteSize; i++) {
+	for (int i = 0; i < toDeleteSize; i++)
+	{
 		// printf("%d\n", i);
 		fflush(stdout);
-		for (int j = 0; j < *objCount; j++) {
+		for (int j = 0; j < *objCount; j++)
+		{
 			objs[i] = objs[j + i];
 		}
 		*objCount -= 1;
-		objs = (sphere*)realloc(objs, *objCount * sizeof(sphere));
-
+		objs = (sphere *)realloc(objs, *objCount * sizeof(sphere));
 	}
 	for (int i = 0; i < *objCount; i++)
 	{
@@ -154,16 +157,56 @@ vec Normalise(vec v)
 	return v;
 }
 
-float getNormal(point P, sphere obj, vec cDir)
+vec getNormal(point P, sphere obj, vec cDir)
 {
 	vec N;
-	N.x = (obj.pos.x - P.x);
-	N.y = (obj.pos.x - P.y);
-	N.z = (obj.pos.z - P.z);
-	return dp(Normalise(N), cDir);
+	N.x = (obj.pos.x - P.x) / 1000;
+	N.y = (obj.pos.x - P.y) / 1000;
+	N.z = (obj.pos.z - P.z) / 1000;
+	return N;
 }
 
-void draw(SDL_Renderer *ren, cam c, sphere *objs, int objCount)
+color cp(color a, color b)
+{
+	color result;
+	result.r = a.g * b.b - a.b * b.g;
+	result.g = a.b * b.r - a.r * b.b;
+	result.b = a.r * b.g - a.g * b.r;
+	return result;
+}
+
+color shade(cam c, light l, hit h, float roughness)
+{
+	l.pos.x = c.pos.x;
+	l.pos.y = c.pos.y;
+	l.pos.z = c.pos.z;
+	vec lDir;
+	lDir.x = l.pos.x - h.P.x;
+	lDir.y = l.pos.y - h.P.y;
+	lDir.z = l.pos.z - h.P.z;
+	lDir = Normalise(lDir);
+	color incident;
+	float dpl = dp(lDir, lDir);
+	incident.r = l.col.r * l.brightness / dpl;
+	incident.g = l.col.g * l.brightness / dpl;
+	incident.b = l.col.b * l.brightness / dpl;
+	vec H;
+	// H.x = (c.dir.x + lDir.x) / 2;
+	// H.y = (c.dir.y + lDir.y) / 2;
+	// H.z = (c.dir.z + lDir.z) / 2;
+	H.x = 0.5;
+	H.y = 0.5;
+	H.z = 0.5;
+	color reflectivity;
+	reflectivity.r = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.r;
+	reflectivity.g = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.g;
+	reflectivity.b = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.b;
+	// printf("(%f, %f, %f)\n", reflectivity.r, reflectivity.g, reflectivity.b);
+	color reflectedLight = cp(incident, reflectivity);
+	return reflectedLight;
+}
+
+void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 {
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
@@ -192,23 +235,22 @@ void draw(SDL_Renderer *ren, cam c, sphere *objs, int objCount)
 				d.z = (500 + c.dir.z) * (c.fov / 90);
 				d = Normalise(d);
 			}
-			// printf("(%f, %f, %f)\n", d.x, d.y, d.z);
-			// hit bestHit;
-			// bestHit.hit = 0;
-			// bestHit.dist = 100000000;
 
 			for (int i = objCount; i > 0; i--)
 			{
-					hit h = traceObj(o, d, objs[i]);
-					if (h.hit)
-					{
-						// printf("%d\n", i);
-						
-						float normalM = getNormal(h.P, h.obj, d);
-						SDL_SetRenderDrawColor(ren, floor(h.obj.col.r * 255) * normalM, floor(h.obj.col.g * 255) * normalM, floor(h.obj.col.b * 255) * normalM, 255);
-						SDL_RenderDrawPoint(ren, x + 500, y + 500);
-						break;
-					}
+				hit h = traceObj(o, d, objs[i]);
+				if (h.hit)
+				{
+					// printf("object\n");
+					cam newC;
+					newC.dir = d;
+					newC.pos = o;
+					color s = shade(newC, l, h, 1);
+					printf("(%f, %f, %f)\n", s.r, s.g, s.b);
+					SDL_SetRenderDrawColor(ren, floor(s.r * 255), floor(s.g * 255), floor(s.b * 255), 255);
+					SDL_RenderDrawPoint(ren, x + 500, y + 500);
+					break;
+				}
 			}
 		}
 	}
@@ -247,41 +289,48 @@ int main(int argc, char *argv[])
 	c.farClip = 1000000;
 	c.orthographic = false;
 
-	int objectCount = 20;
+	light l;
+	l.brightness = 1;
+	l.col.r = 1;
+	l.col.g = 0;
+	l.col.b = 0;
+	l.pos.x = 100;
+	l.pos.y = 100;
+	l.pos.z = 100;
 
+	int objectCount = 2;
 
 	sphere *temp = (sphere *)malloc(sizeof(sphere) * objectCount);
-	
+
 	temp[0].pos.x = 0;
 	temp[0].pos.y = 0;
-	temp[0].pos.z = 0;
+	temp[0].pos.z = 100;
 	temp[0].col.r = 1;
 	temp[0].col.g = 0;
 	temp[0].col.b = 0;
 	temp[0].r = 200;
 	temp[1].pos.x = -200;
 	temp[1].pos.y = 0;
-	temp[1].pos.z = 500;
+	temp[1].pos.z = 100;
 	temp[1].col.r = 1;
 	temp[1].col.g = 0;
 	temp[1].col.b = 1;
 	temp[1].r = 100;
 
-
-	for (int i = 2; i < objectCount; i++)
-	{
-		temp[i].pos.x = (rand() % 2000) - 500;
-		temp[i].pos.y = (rand() % 2000) - 500;
-		temp[i].pos.z = (rand() % 2000) - 1000;
-		temp[i].col.r = ((float)(rand() % 155) + 100) / 255;
-		temp[i].col.g = ((float)(rand() % 155) + 100) / 255;
-		temp[i].col.b = ((float)(rand() % 155) + 100) / 255;
-		temp[i].r = (rand() % 100) + 50;
-		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
-		// printf("draw %d object\n", i + 1);
-	}
+	// for (int i = 2; i < objectCount; i++)
+	// {
+	// 	temp[i].pos.x = (rand() % 2000) - 500;
+	// 	temp[i].pos.y = (rand() % 2000) - 500;
+	// 	temp[i].pos.z = (rand() % 2000) - 1000;
+	// 	temp[i].col.r = ((float)(rand() % 155) + 100) / 255;
+	// 	temp[i].col.g = ((float)(rand() % 155) + 100) / 255;
+	// 	temp[i].col.b = ((float)(rand() % 155) + 100) / 255;
+	// 	temp[i].r = (rand() % 100) + 50;
+	// 	// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
+	// 	// printf("draw %d object\n", i + 1);
+	// }
 	sphere **objs = &temp;
-	draw(ren, c, *objs, objectCount);
+	draw(ren, c,l, *objs, objectCount);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -325,7 +374,7 @@ int main(int argc, char *argv[])
 					c.orthographic = !c.orthographic;
 					break;
 				}
-				draw(ren, c, *objs, objectCount);
+				draw(ren, c,l, *objs, objectCount);
 				break;
 
 			case SDL_QUIT:
