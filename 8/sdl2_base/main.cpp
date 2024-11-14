@@ -25,6 +25,7 @@ typedef struct color
 		o.x = r;
 		o.y = g;
 		o.z = b;
+		return o;
 	}
 
 	void toCol(vec i) {
@@ -215,9 +216,9 @@ vec Normalise(vec v)
 vec getNormal(point P, sphere obj, vec cDir)
 {
 	vec N;
-	N.x = -(obj.pos.x - P.x);
-	N.y = -(obj.pos.x - P.y);
-	N.z = -(obj.pos.z - P.z);
+	N.x = P.x - obj.pos.x;
+	N.y = P.y - obj.pos.y;
+	N.z = P.z - obj.pos.z;
 	N = Normalise(N);
 	return N;
 }
@@ -231,11 +232,29 @@ vec cp(vec a, vec b)
 	return result;
 }
 
+bool shadow(cam c, light l, hit h, sphere *sphereObjs, int sphereCount)
+{
+	vec lDir;
+	lDir.x = l.pos.x - h.P.x;
+	lDir.y = l.pos.y - h.P.y;
+	lDir.z = l.pos.z - h.P.z;
+	lDir = Normalise(lDir);
+	for (int i = 0; i < sphereCount; i++)
+	{
+		hit temp = traceObj(h.P, lDir, sphereObjs[i]);
+		if (temp.hit == 1 && temp.dist < h.dist && temp.obj.pos.x != h.obj.pos.x && temp.obj.pos.y != h.obj.pos.y && temp.obj.pos.z != h.obj.pos.z)
+		{
+			return 1;
+		}
+	}
+	return 0;
+}
+
 color shade(cam c, light l, hit h, float roughness)
 {
-	l.pos.x = c.pos.x;
-	l.pos.y = c.pos.y;
-	l.pos.z = c.pos.z;
+	// l.pos.x = c.pos.x;
+	// l.pos.y = c.pos.y;
+	// l.pos.z = c.pos.z;
 	vec lDir;
 	lDir.x = l.pos.x - h.P.x;
 	lDir.y = l.pos.y - h.P.y;
@@ -258,12 +277,12 @@ color shade(cam c, light l, hit h, float roughness)
 	}
 	// printf("(%f, %f, %f)\n", incident.r, incident.g, incident.b);
 	vec H;
-	// H.x = (c.dir.x + lDir.x) / 2;
-	// H.y = (c.dir.y + lDir.y) / 2;
-	// H.z = (c.dir.z + lDir.z) / 2;
-	H.x = 0.5;
-	H.y = 0.5;
-	H.z = 0.5;
+	H.x = (c.dir.x + lDir.x) / 2;
+	H.y = (c.dir.y + lDir.y) / 2;
+	H.z = (c.dir.z + lDir.z) / 2;
+	// H.x = 0.5;
+	// H.y = 0.5;
+	// H.z = 0.5;
 	color reflectivity;
 	reflectivity.r = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.r;
 	reflectivity.g = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.g;
@@ -317,16 +336,17 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 					cam newC;
 					newC.dir = d;
 					newC.pos = o;
-					color s = shade(newC, l, h, 1);
+					color s = shade(newC, l, h, 10);
 					// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
-					SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
+					bool shad = shadow(newC, l, h, objs, objCount);
+					SDL_SetRenderDrawColor(ren, floor(s.r) * !shad, floor(s.g) * !shad, floor(s.b) * !shad, 255);
 					SDL_RenderDrawPoint(ren, x + 500, y + 500);
 					break;
 				}
 			}
 		}
 	}
-	// printf("drawn");
+	printf("drawn");
 	fflush(stdout);
 	SDL_RenderPresent(ren);
 	// printf("drawn");
@@ -359,28 +379,28 @@ int main(int argc, char *argv[])
 	c.fov = 20;
 	c.nearClip = 1;
 	c.farClip = 1000000;
-	c.orthographic = false;
+	c.orthographic = 1;
 
 	light l;
 	l.brightness = 10000;
 	l.col.r = 1;
 	l.col.g = 1;
 	l.col.b = 1;
-	l.pos.x = 100;
-	l.pos.y = 100;
-	l.pos.z = 100;
+	l.pos.x = -500;
+	l.pos.y = 0;
+	l.pos.z = 0;
 
-	int objectCount = 10;
+	int objectCount = 20;
 
 	sphere *temp = (sphere *)malloc(sizeof(sphere) * objectCount);
 
-	// temp[0].pos.x = 0;
-	// temp[0].pos.y = 0;
-	// temp[0].pos.z = 100;
-	// temp[0].col.r = 1;
-	// temp[0].col.g = 0;
-	// temp[0].col.b = 0;
-	// temp[0].r = 200;
+	temp[0].pos.x = 0;
+	temp[0].pos.y = 0;
+	temp[0].pos.z = 100;
+	temp[0].col.r = 1;
+	temp[0].col.g = 0;
+	temp[0].col.b = 0;
+	temp[0].r = 100;
 	temp[1].pos.x = -200;
 	temp[1].pos.y = 0;
 	temp[1].pos.z = 100;
