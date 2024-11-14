@@ -20,57 +20,74 @@ typedef struct color
 	float g;
 	float b;
 
-	vec toVec() {
+	vec toVec()
+	{
 		vec o;
 		o.x = r;
 		o.y = g;
 		o.z = b;
+		return o;
 	}
 
-	void toCol(vec i) {
+	void toCol(vec i)
+	{
 		r = i.x;
 		g = i.y;
 		b = i.z;
 	}
 
-	void normaliseF() {
-		if (r > 1) {
+	void normaliseF()
+	{
+		if (r > 1)
+		{
 			r = 1;
 		}
-		if (r < 0) {
+		if (r < 0)
+		{
 			r = 0;
 		}
-				if (g > 1) {
+		if (g > 1)
+		{
 			g = 1;
 		}
-		if (g < 0) {
+		if (g < 0)
+		{
 			g = 0;
 		}
-				if (b > 1) {
+		if (b > 1)
+		{
 			b = 1;
 		}
-		if (b < 0) {
+		if (b < 0)
+		{
 			b = 0;
 		}
 	}
 
-	void normalise255() {
-				if (r > 255) {
+	void normalise255()
+	{
+		if (r > 255)
+		{
 			r = 255;
 		}
-		if (r < 0) {
+		if (r < 0)
+		{
 			r = 0;
 		}
-				if (g > 255) {
+		if (g > 255)
+		{
 			g = 255;
 		}
-		if (g < 0) {
+		if (g < 0)
+		{
 			g = 0;
 		}
-				if (b > 255) {
+		if (b > 255)
+		{
 			b = 255;
 		}
-		if (b < 0) {
+		if (b < 0)
+		{
 			b = 0;
 		}
 	}
@@ -122,52 +139,55 @@ float dp(vec p1, vec p2)
 	return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
 }
 
-void sortObjects(sphere *objs, int *objCount, cam *c)
+sphere* sortObjects(sphere* objs, int *objCount, cam *c)
 {
-	int *toDelete = (int *)calloc(0, sizeof(int));
-	int toDeleteSize = 0;
-	for (int i = 0; i < *objCount; i++)
-	{
-		if (objs[i].pos.z - objs[i].r < (*c).pos.z + (*c).nearClip && objs[i].pos.z - objs[i].r > (*c).pos.z + (*c).farClip)
-		{
-			toDeleteSize++;
-			toDelete = (int *)realloc(toDelete, toDeleteSize * sizeof(int));
-			toDelete[toDeleteSize - 1] = i;
-		}
-	}
+	// int *toDelete = (int *)calloc(0, sizeof(int));
+	// int toDeleteSize = 0;
+	sphere* output = objs;
+	// for (int i = 0; i < *objCount; i++)
+	// {
+	// 	if (objs[i].pos.z - objs[i].r < (*c).pos.z + (*c).nearClip && objs[i].pos.z - objs[i].r > (*c).pos.z + (*c).farClip)
+	// 	{
+	// 		toDeleteSize++;
+	// 		toDelete = (int *)realloc(toDelete, toDeleteSize * sizeof(int));
+	// 		toDelete[toDeleteSize - 1] = i;
+	// 	}
+	// }
 
-	for (int i = 0; i < toDeleteSize; i++)
-	{
-		// printf("%d\n", i);
-		fflush(stdout);
-		for (int j = 0; j < *objCount; j++)
-		{
-			objs[i] = objs[j + i];
-		}
-		*objCount -= 1;
-		objs = (sphere *)realloc(objs, *objCount * sizeof(sphere));
-	}
+	// for (int i = 0; i < toDeleteSize; i++)
+	// {
+	// 	// printf("%d\n", i);
+	// 	fflush(stdout);
+	// 	for (int j = 0; j < *objCount; j++)
+	// 	{
+	// 		output[i] = output[j + i];
+	// 	}
+	// 	*objCount -= 1;
+	// 	// objs = (sphere *)realloc(objs, *objCount * sizeof(sphere));
+	// }
 	for (int i = 0; i < *objCount; i++)
 	{
 		for (int j = i + 1; j < *objCount; j++)
 		{
-			if (objs[i].pos.z < objs[j].pos.z)
+			if (output[i].pos.z < output[j].pos.z)
 			{
-				sphere temp = objs[i];
-				objs[i] = objs[j];
-				objs[j] = temp;
+				sphere temp = output[i];
+				output[i] = output[j];
+				output[j] = temp;
 			}
 		}
 	}
+	return output;
 }
 
 hit traceObj(point src, vec dir, sphere obj)
 {
 	hit out;
-	// if (obj.pos.z < src.z) {
-	// 	out.hit = 0;
-	// 	return out;
-	// }
+	if (obj.pos.z + obj.r < src.z)
+	{
+		out.hit = 0;
+		return out;
+	}
 	point O = src;
 	vec D = dir;
 	point C = obj.pos;
@@ -212,12 +232,12 @@ vec Normalise(vec v)
 	return v;
 }
 
-vec getNormal(point P, sphere obj, vec cDir)
+vec getNormal(point P, sphere obj)
 {
 	vec N;
-	N.x = -(obj.pos.x - P.x);
-	N.y = -(obj.pos.x - P.y);
-	N.z = -(obj.pos.z - P.z);
+	N.x = (P.x - obj.pos.x);
+	N.y = (P.y - obj.pos.y);
+	N.z = (P.z - obj.pos.z);
 	N = Normalise(N);
 	return N;
 }
@@ -231,11 +251,44 @@ vec cp(vec a, vec b)
 	return result;
 }
 
+bool shadow(light l, hit h, sphere *objs, int objCount)
+{
+	vec lDir;
+	lDir.x = l.pos.x - h.P.x;
+	lDir.y = l.pos.y - h.P.y;
+	lDir.z = l.pos.z - h.P.z;
+	// printf("hit: (%f, %f, %f)\n", h.P.x, h.P.y, h.P.z);
+	// lDir = Normalise(lDir);
+	// printf("lDir: (%f, %f, %f)\n", lDir.x, lDir.y, lDir.z);
+	for (int i = 1; i < objCount; i++)
+	{
+		hit RayFire = traceObj(l.pos, lDir, objs[i]);
+		if (RayFire.hit && RayFire.obj.pos.x != h.obj.pos.x && RayFire.obj.pos.y != h.obj.pos.y && RayFire.obj.pos.z != h.obj.pos.z && RayFire.dist < h.dist && RayFire.obj.pos.x != l.pos.x && RayFire.obj.pos.y != l.pos.y && RayFire.obj.pos.z != l.pos.z)
+		{
+			printf("light hit\n");
+			// printf("obj hit: (%f, %f, %f)\n", RayFire.P.x, RayFire.P.y, RayFire.P.z);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+float diffuse(hit h, light l)
+{
+	vec lDir;
+	lDir.x = l.pos.x - h.P.x;
+	lDir.y = l.pos.y - h.P.y;
+	lDir.z = l.pos.z - h.P.z;
+	lDir = Normalise(lDir);
+	hit lightHit = traceObj(h.P, lDir, h.obj);
+	return l.brightness / lightHit.dist;
+}
+
 color shade(cam c, light l, hit h, float roughness)
 {
-	l.pos.x = c.pos.x;
-	l.pos.y = c.pos.y;
-	l.pos.z = c.pos.z;
+	// l.pos.x = c.pos.x;
+	// l.pos.y = c.pos.y;
+	// l.pos.z = c.pos.z;
 	vec lDir;
 	lDir.x = l.pos.x - h.P.x;
 	lDir.y = l.pos.y - h.P.y;
@@ -247,27 +300,30 @@ color shade(cam c, light l, hit h, float roughness)
 	incident.g = l.col.g * l.brightness / dpl;
 	incident.b = l.col.b * l.brightness / dpl;
 	// incident.toCol(Normalise(incident.toVec()));
-	if (incident.r > 255) {
+	if (incident.r > 255)
+	{
 		incident.r = 255;
 	}
-	if (incident.g > 255) {
+	if (incident.g > 255)
+	{
 		incident.g = 255;
 	}
-	if (incident.b > 255) {
+	if (incident.b > 255)
+	{
 		incident.b = 255;
 	}
 	// printf("(%f, %f, %f)\n", incident.r, incident.g, incident.b);
 	vec H;
-	// H.x = (c.dir.x + lDir.x) / 2;
-	// H.y = (c.dir.y + lDir.y) / 2;
-	// H.z = (c.dir.z + lDir.z) / 2;
-	H.x = 0.5;
-	H.y = 0.5;
-	H.z = 0.5;
+	H.x = (c.dir.x + lDir.x) / 2;
+	H.y = (c.dir.y + lDir.y) / 2;
+	H.z = (c.dir.z + lDir.z) / 2;
+	// H.x = 0.5;
+	// H.y = 0.5;
+	// H.z = 0.5;
 	color reflectivity;
-	reflectivity.r = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.r;
-	reflectivity.g = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.g;
-	reflectivity.b = pow(dp(getNormal(h.P, h.obj, c.dir), H), 1 / roughness) * h.obj.col.b;
+	reflectivity.r = pow(dp(getNormal(h.P, h.obj), H), 1 / roughness) * h.obj.col.r;
+	reflectivity.g = pow(dp(getNormal(h.P, h.obj), H), 1 / roughness) * h.obj.col.g;
+	reflectivity.b = pow(dp(getNormal(h.P, h.obj), H), 1 / roughness) * h.obj.col.b;
 	// printf("(%f, %f, %f)\n", reflectivity.r, reflectivity.g, reflectivity.b);
 	color reflectedLight;
 	reflectedLight.toCol(cp(incident.toVec(), reflectivity.toVec()));
@@ -282,7 +338,7 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 {
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
-	sortObjects(objs, &objCount, &c);
+	// sphere *objs = sortObjects(iobjs, &objCount, &c);
 	for (int x = -500; x < 500; x++)
 	{
 		for (int y = -500; y < 500; y++)
@@ -308,25 +364,57 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 				d = Normalise(d);
 			}
 
-			for (int i = objCount; i > 0; i--)
+			hit besthit;
+			besthit.hit = 0;
+			besthit.dist = MAXFLOAT;
+			for (int i = 0; i < objCount; i++)
 			{
+				if (objs[i].pos.z + objs[i].r < o.z)
+				{
+					continue;
+				}
+				// printf("attempt\n");
 				hit h = traceObj(o, d, objs[i]);
-				if (h.hit)
+				if (h.hit && h.dist < besthit.dist)
+				{
+					besthit = h;
+				}
+			}
+			if (besthit.hit)
 				{
 					// printf("object\n");
-					cam newC;
-					newC.dir = d;
-					newC.pos = o;
-					color s = shade(newC, l, h, 1);
+					// cam newC;
+					// newC.dir = d;
+					// newC.pos = o;
+					// color s = shade(newC, l, besthit, 100);
+					// bool blocked = shadow(l, besthit, objs, objCount);
+					// float dif = diffuse(h, l);
 					// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
-					SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
+					color final;
+					// final.r = floor(s.r);
+					// final.g = floor(s.g);
+					// final.b = floor(s.b);
+					// final.r *= !blocked;
+					// final.g *= !blocked;
+					// final.b *= !blocked;
+					final.r = besthit.obj.col.r * 255;
+					final.g = besthit.obj.col.g * 255;
+					final.b = besthit.obj.col.b * 255;
+					if (besthit.obj.pos.x == l.pos.x && besthit.obj.pos.y == l.pos.y && besthit.obj.pos.z == l.pos.z)
+					{
+						final.r = 255;
+						final.g = 255;
+						final.b = 255;
+					}
+					// final.normalise255();
+					// printf("(%f, %f, %f)\n", final.r, final.g, final.b);
+					SDL_SetRenderDrawColor(ren, final.r, final.g, final.b, 255);
 					SDL_RenderDrawPoint(ren, x + 500, y + 500);
 					break;
 				}
-			}
 		}
 	}
-	// printf("drawn");
+	printf("drawn");
 	fflush(stdout);
 	SDL_RenderPresent(ren);
 	// printf("drawn");
@@ -348,7 +436,7 @@ int main(int argc, char *argv[])
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 
-	const int MOVE = 10;
+	const int MOVE = 50;
 	cam c;
 	c.pos.x = 0;
 	c.pos.y = 0;
@@ -359,37 +447,46 @@ int main(int argc, char *argv[])
 	c.fov = 20;
 	c.nearClip = 1;
 	c.farClip = 1000000;
-	c.orthographic = false;
+	c.orthographic = true;
 
 	light l;
-	l.brightness = 10000;
+	l.brightness = 1000000;
 	l.col.r = 1;
 	l.col.g = 1;
 	l.col.b = 1;
-	l.pos.x = 100;
-	l.pos.y = 100;
-	l.pos.z = 100;
+	l.pos.x = 50;
+	l.pos.y = 0;
+	l.pos.z = -500;
 
-	int objectCount = 10;
+	int objectCount = 11;
 
 	sphere *temp = (sphere *)malloc(sizeof(sphere) * objectCount);
 
-	// temp[0].pos.x = 0;
-	// temp[0].pos.y = 0;
-	// temp[0].pos.z = 100;
-	// temp[0].col.r = 1;
-	// temp[0].col.g = 0;
-	// temp[0].col.b = 0;
-	// temp[0].r = 200;
-	temp[1].pos.x = -200;
+
+	temp[0].pos.x = l.pos.x;
+	temp[0].pos.y = l.pos.y;
+	temp[0].pos.z = l.pos.z;
+	temp[0].col.r = 1;
+	temp[0].col.g = 1;
+	temp[0].col.b = 1;
+	temp[0].r = 20;
+	temp[1].pos.x = 0;
 	temp[1].pos.y = 0;
-	temp[1].pos.z = 100;
+	temp[1].pos.z = 0;
 	temp[1].col.r = 1;
 	temp[1].col.g = 0;
-	temp[1].col.b = 1;
-	temp[1].r = 100;
+	temp[1].col.b = 0;
+	temp[1].r = 50;
+	temp[2].pos.x = -200;
+	temp[2].pos.y = 0;
+	temp[2].pos.z = 0;
+	temp[2].col.r = 1;
+	temp[2].col.g = 0;
+	temp[2].col.b = 1;
+	temp[2].r = 100;
 
-	for (int i = 2; i < objectCount; i++)
+
+	for (int i = 3; i < objectCount; i++)
 	{
 		temp[i].pos.x = (rand() % 2000) - 500;
 		temp[i].pos.y = (rand() % 2000) - 500;
@@ -402,7 +499,7 @@ int main(int argc, char *argv[])
 		// printf("draw %d object\n", i + 1);
 	}
 	sphere **objs = &temp;
-	draw(ren, c,l, *objs, objectCount);
+	draw(ren, c, l, *objs, objectCount);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -416,22 +513,22 @@ int main(int argc, char *argv[])
 				switch (event.key.keysym.sym)
 				{
 				case SDLK_w:
-					c.pos.z += MOVE;
+					l.pos.z += MOVE;
 					break;
 				case SDLK_a:
-					c.pos.x -= MOVE;
+					l.pos.x -= MOVE;
 					break;
 				case SDLK_s:
-					c.pos.z -= MOVE;
+					l.pos.z -= MOVE;
 					break;
 				case SDLK_d:
-					c.pos.x += MOVE;
+					l.pos.x += MOVE;
 					break;
 				case SDLK_SPACE:
-					c.pos.y -= MOVE;
+					l.pos.y -= MOVE;
 					break;
 				case SDLK_LSHIFT:
-					c.pos.y += MOVE;
+					l.pos.y += MOVE;
 					break;
 				case SDLK_ESCAPE:
 					finished = 1;
@@ -446,7 +543,11 @@ int main(int argc, char *argv[])
 					c.orthographic = !c.orthographic;
 					break;
 				}
-				draw(ren, c,l, *objs, objectCount);
+				temp[0].pos.x = l.pos.x;
+				temp[0].pos.y = l.pos.y;
+				temp[0].pos.z = l.pos.z;
+				temp[0].r = 20;
+				draw(ren, c, l, *objs, objectCount);
 				break;
 
 			case SDL_QUIT:
@@ -455,6 +556,9 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+
+	free(objs);
+	free(temp);
 
 	SDL_Surface *sectionSurface = SDL_CreateRGBSurface(0, 1000, 1000, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
 	SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
