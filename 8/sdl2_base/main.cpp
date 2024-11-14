@@ -216,9 +216,9 @@ vec Normalise(vec v)
 vec getNormal(point P, sphere obj, vec cDir)
 {
 	vec N;
-	N.x = P.x - obj.pos.x;
-	N.y = P.y - obj.pos.y;
-	N.z = P.z - obj.pos.z;
+	N.x = -(P.x - obj.pos.x);
+	N.y = -(P.y - obj.pos.y);
+	N.z = -(P.z - obj.pos.z);
 	N = Normalise(N);
 	return N;
 }
@@ -396,14 +396,14 @@ int main(int argc, char *argv[])
 
 	temp[0].pos.x = 0;
 	temp[0].pos.y = 0;
-	temp[0].pos.z = 100;
+	temp[0].pos.z = 0;
 	temp[0].col.r = 1;
 	temp[0].col.g = 0;
 	temp[0].col.b = 0;
 	temp[0].r = 100;
 	temp[1].pos.x = -200;
 	temp[1].pos.y = 0;
-	temp[1].pos.z = 100;
+	temp[1].pos.z = 0;
 	temp[1].col.r = 1;
 	temp[1].col.g = 0;
 	temp[1].col.b = 1;
