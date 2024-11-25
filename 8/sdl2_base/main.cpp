@@ -336,9 +336,16 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 					cam newC;
 					newC.dir = d;
 					newC.pos = o;
-					color s = shade(newC, l, h, 10);
-					// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
 					bool shad = shadow(newC, l, h, objs, objCount);
+					color s;
+					if (shad) {
+						s.r = 0;
+						s.g = 0;
+						s.b = 0;
+					} else {
+					s = shade(newC, l, h, 1);
+					}
+					// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
 					SDL_SetRenderDrawColor(ren, floor(s.r) * !shad, floor(s.g) * !shad, floor(s.b) * !shad, 255);
 					SDL_RenderDrawPoint(ren, x + 500, y + 500);
 					break;
