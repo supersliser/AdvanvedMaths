@@ -385,18 +385,18 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 	{
 		for (int y = -500; y < 500; y++)
 		{
-			color output[sampleAmount][sampleAmount];
+			// color output[sampleAmount][sampleAmount];
 			// output = (color*)calloc(sampleAmount * sampleAmount, sizeof(color));
-			float increase = (float)1 / sampleAmount;
-			for (int xx = 0; xx < sampleAmount; xx++)
-			{
-				for (int yy = 0; yy < sampleAmount; yy++)
-				{
+			// float increase = (float)1 / sampleAmount;
+			// for (float xx = -sampleAmount / 2; xx < sampleAmount / 2; xx++)
+			// {
+			// 	for (float yy = -sampleAmount / 2; yy < sampleAmount / 2; yy++)
+			// 	{
 					// printf("(%f, %f)\n", xx, yy);
 					point o;
 
-					o.x = x + c.pos.x + xx / sampleAmount;
-					o.y = y + c.pos.y + xx / sampleAmount;
+					o.x = x + c.pos.x;
+					o.y = y + c.pos.y;
 					o.z = c.pos.z;
 					vec d;
 
@@ -408,8 +408,8 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 					}
 					else
 					{
-						d.x = (x + c.dir.x + xx / sampleAmount) * (c.fov / 90);
-						d.y = (y + c.dir.y + yy / sampleAmount) * (c.fov / 90);
+						d.x = (x + c.dir.x) * (c.fov / 90);
+						d.y = (y + c.dir.y) * (c.fov / 90);
 						d.z = (500 + c.dir.z) * (c.fov / 90);
 						d = Normalise(d);
 					}
@@ -432,22 +432,21 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 							}
 							else
 							{
-								s = shade(newC, l, h, 1, 1, objs, objCount, 0, 2);
+								s = shade(newC, l, h, 1, 1, objs, objCount, 0, 10);
 							}
 							// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
-							output[xx][yy] = s;
-			SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
-			SDL_RenderDrawPoint(ren, x + 500, y + 500);							
-			break;
+							// output[(int)float(xx)][(int)float(yy)] = s;
+							SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
+							SDL_RenderDrawPoint(ren, x + 500, y + 500);
+							break;
 							// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
 						}
-					}
-
-				}
+				// 	}
+				// }
 			}
-		}
-					// SDL_RenderPresent(ren);
 
+		}
+		// SDL_RenderPresent(ren);
 	}
 	printf("drawn");
 	fflush(stdout);
