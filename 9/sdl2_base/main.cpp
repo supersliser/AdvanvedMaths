@@ -97,6 +97,7 @@ typedef struct sphere
 	point pos;
 	float r;
 	color col;
+	int id;
 } sphere;
 typedef struct hit
 {
@@ -252,7 +253,7 @@ vec cp(vec a, vec b)
 	return result;
 }
 
-color reflect(point p, vec normal, vec i, sphere *objs, int objCount, light l, int recursionCount, int recursionMax, float reflectivity, float roughness)
+color reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light l, int recursionCount, int recursionMax, float reflectivity, float roughness)
 {
 	vec r;
 	r.x = i.x - 2 * (dp(i, normal) * normal.x);
@@ -262,7 +263,7 @@ color reflect(point p, vec normal, vec i, sphere *objs, int objCount, light l, i
 	for (int i = objCount; i > 0; i--)
 	{
 		hit h = traceObj(p, r, objs[i]);
-		if (h.hit)
+		if (h.hit && h.obj.id != current.id)
 		{
 			// printf("object\n");
 			cam newC;
@@ -285,9 +286,9 @@ color reflect(point p, vec normal, vec i, sphere *objs, int objCount, light l, i
 		}
 	}
 	color o;
-	o.r = 0;
-	o.g = 0;
-	o.b = 0;
+	o.r = -1;
+	o.g = -1;
+	o.b = -1;
 	return o;
 }
 
@@ -357,16 +358,18 @@ color shade(cam c, light l, hit h, float roughness, float reflectivityStrength, 
 	reflectedLight.b = incident.b * reflectivity.b;
 	reflectedLight.normalise255();
 
-	if (recursionCount <= recursionMax)
+	if (recursionCount < recursionMax)
 	{
-		color reflectedRayColor = reflect(c.pos, getNormal(h.P, h.obj), c.dir, objs, objCount, l, recursionCount, recursionMax, reflectivityStrength, roughness);
+		color reflectedRayColor = reflect(h.obj, c.pos, getNormal(h.P, h.obj), c.dir, objs, objCount, l, recursionCount, recursionMax, reflectivityStrength, roughness);
+		if (reflectedRayColor.r != -1)
+		{
+			color o;
+			o.r = reflectedLight.r * (1 - reflectivityStrength) + reflectedRayColor.r * reflectivityStrength;
+			o.g = reflectedLight.g * (1 - reflectivityStrength) + reflectedRayColor.g * reflectivityStrength;
+			o.b = reflectedLight.b * (1 - reflectivityStrength) + reflectedRayColor.b * reflectivityStrength;
 
-		color o;
-		o.r = reflectedLight.r * (1 - reflectivityStrength) + reflectedRayColor.r * reflectivityStrength;
-		o.g = reflectedLight.g * (1 - reflectivityStrength) + reflectedRayColor.g * reflectivityStrength;
-		o.b = reflectedLight.b * (1 - reflectivityStrength) + reflectedRayColor.b * reflectivityStrength;
-
-		return o;
+			return o;
+		}
 	}
 
 	return reflectedLight;
@@ -374,6 +377,7 @@ color shade(cam c, light l, hit h, float roughness, float reflectivityStrength, 
 
 void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 {
+	const int sampleAmount = 1;
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 	sortObjects(objs, &objCount, &c);
@@ -381,55 +385,69 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 	{
 		for (int y = -500; y < 500; y++)
 		{
-			point o;
-
-			o.x = x + c.pos.x;
-			o.y = y + c.pos.y;
-			o.z = c.pos.z;
-			vec d;
-
-			if (c.orthographic)
+			color output[sampleAmount][sampleAmount];
+			// output = (color*)calloc(sampleAmount * sampleAmount, sizeof(color));
+			float increase = (float)1 / sampleAmount;
+			for (int xx = 0; xx < sampleAmount; xx++)
 			{
-				d.x = 0;
-				d.y = 0;
-				d.z = 1;
-			}
-			else
-			{
-				d.x = (x + c.dir.x) * (c.fov / 90);
-				d.y = (y + c.dir.y) * (c.fov / 90);
-				d.z = (500 + c.dir.z) * (c.fov / 90);
-				d = Normalise(d);
-			}
-
-			for (int i = objCount; i > 0; i--)
-			{
-				hit h = traceObj(o, d, objs[i]);
-				if (h.hit)
+				for (int yy = 0; yy < sampleAmount; yy++)
 				{
-					// printf("object\n");
-					cam newC;
-					newC.dir = d;
-					newC.pos = o;
-					bool shad = shadow(newC, l, h, objs, objCount);
-					color s;
-					if (shad)
+					// printf("(%f, %f)\n", xx, yy);
+					point o;
+
+					o.x = x + c.pos.x + xx / sampleAmount;
+					o.y = y + c.pos.y + xx / sampleAmount;
+					o.z = c.pos.z;
+					vec d;
+
+					if (c.orthographic)
 					{
-						s.r = 0;
-						s.g = 0;
-						s.b = 0;
+						d.x = 0;
+						d.y = 0;
+						d.z = 1;
 					}
 					else
 					{
-						s = shade(newC, l, h, 1, 0.2, objs, objCount, 0, 4);
+						d.x = (x + c.dir.x + xx / sampleAmount) * (c.fov / 90);
+						d.y = (y + c.dir.y + yy / sampleAmount) * (c.fov / 90);
+						d.z = (500 + c.dir.z) * (c.fov / 90);
+						d = Normalise(d);
 					}
-					// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
-					SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
-					SDL_RenderDrawPoint(ren, x + 500, y + 500);
-					break;
+					for (int i = objCount; i > 0; i--)
+					{
+						hit h = traceObj(o, d, objs[i]);
+						if (h.hit)
+						{
+							// printf("object\n");
+							cam newC;
+							newC.dir = d;
+							newC.pos = o;
+							bool shad = shadow(newC, l, h, objs, objCount);
+							color s;
+							if (shad)
+							{
+								s.r = 0;
+								s.g = 0;
+								s.b = 0;
+							}
+							else
+							{
+								s = shade(newC, l, h, 1, 1, objs, objCount, 0, 2);
+							}
+							// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
+							output[xx][yy] = s;
+			SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
+			SDL_RenderDrawPoint(ren, x + 500, y + 500);							
+			break;
+							// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
+						}
+					}
+
 				}
 			}
 		}
+					// SDL_RenderPresent(ren);
+
 	}
 	printf("drawn");
 	fflush(stdout);
@@ -486,6 +504,7 @@ int main(int argc, char *argv[])
 	temp[0].col.g = 0;
 	temp[0].col.b = 0;
 	temp[0].r = 100;
+	temp[0].id = 0;
 	temp[1].pos.x = -500;
 	temp[1].pos.y = 0;
 	temp[1].pos.z = -50;
@@ -493,16 +512,18 @@ int main(int argc, char *argv[])
 	temp[1].col.g = 0;
 	temp[1].col.b = 1;
 	temp[1].r = 50;
+	temp[1].id = 1;
 
 	for (int i = 2; i < objectCount; i++)
 	{
-		temp[i].pos.x = (rand() % 2000) - 500;
-		temp[i].pos.y = (rand() % 2000) - 500;
-		temp[i].pos.z = (rand() % 2000) - 1000;
+		temp[i].pos.x = (rand() % 1000) - 500;
+		temp[i].pos.y = (rand() % 1000) - 500;
+		temp[i].pos.z = (rand() % 200) + 100;
 		temp[i].col.r = ((float)(rand() % 155) + 100) / 255;
 		temp[i].col.g = ((float)(rand() % 155) + 100) / 255;
 		temp[i].col.b = ((float)(rand() % 155) + 100) / 255;
-		temp[i].r = (rand() % 100) + 50;
+		temp[i].r = (rand() % 130) + 20;
+		temp[i].id = i;
 		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
 		// printf("draw %d object\n", i + 1);
 	}
