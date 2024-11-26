@@ -377,7 +377,7 @@ color shade(cam c, light l, hit h, float roughness, float reflectivityStrength, 
 
 void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 {
-	const int sampleAmount = 1;
+	const float sampleAmount = 8;
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 	sortObjects(objs, &objCount, &c);
@@ -385,18 +385,16 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 	{
 		for (int y = -500; y < 500; y++)
 		{
-			// color output[sampleAmount][sampleAmount];
-			// output = (color*)calloc(sampleAmount * sampleAmount, sizeof(color));
-			// float increase = (float)1 / sampleAmount;
-			// for (float xx = -sampleAmount / 2; xx < sampleAmount / 2; xx++)
-			// {
-			// 	for (float yy = -sampleAmount / 2; yy < sampleAmount / 2; yy++)
-			// 	{
+			color output[(int)sampleAmount][(int)sampleAmount];
+			for (float xx = 0; xx < 1; xx += 1 / sampleAmount)
+			{
+				for (float yy = 0; yy < 1; yy += 1 / sampleAmount)
+				{
 					// printf("(%f, %f)\n", xx, yy);
 					point o;
 
-					o.x = x + c.pos.x;
-					o.y = y + c.pos.y;
+					o.x = x + c.pos.x + xx;
+					o.y = y + c.pos.y + yy;
 					o.z = c.pos.z;
 					vec d;
 
@@ -432,19 +430,35 @@ void draw(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount)
 							}
 							else
 							{
-								s = shade(newC, l, h, 1, 1, objs, objCount, 0, 10);
+								s = shade(newC, l, h, 1, 0.2, objs, objCount, 0, 2);
 							}
 							// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
-							// output[(int)float(xx)][(int)float(yy)] = s;
-							SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
-							SDL_RenderDrawPoint(ren, x + 500, y + 500);
+							output[(int)float(xx)][(int)float(yy)] = s;
+
 							break;
 							// printf("(%f, %f, %f)\n", s.r, s.g, s.b);
 						}
-				// 	}
-				// }
+					}
+				}
 			}
+			color s;
+			for (float xx = 0; xx < 1; xx += 1 / sampleAmount)
+			{
+				for (float yy = 0; yy < 1; yy += 1 / sampleAmount)
+				{
+					s.r += output[(int)float(xx)][(int)float(yy)].r;
+					s.g += output[(int)float(xx)][(int)float(yy)].g;
+					s.b += output[(int)float(xx)][(int)float(yy)].b;
+				}
 
+			}
+			s.r /= sampleAmount * sampleAmount;
+			s.g /= sampleAmount * sampleAmount;
+			s.b /= sampleAmount * sampleAmount;
+			s.normalise255();
+			SDL_SetRenderDrawColor(ren, floor(s.r), floor(s.g), floor(s.b), 255);
+			printf("(%f, %f, %f)\n at (%d, %d)\n", s.r, s.g, s.b, x, y);
+			SDL_RenderDrawPoint(ren, x + 500, y + 500);
 		}
 		// SDL_RenderPresent(ren);
 	}
