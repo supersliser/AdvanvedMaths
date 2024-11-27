@@ -1,4 +1,5 @@
 #include "color.h"
+#include <math.h>
 
 color::color(float r, float g, float b)
 {
@@ -36,7 +37,7 @@ void color::normaliseF()
     {
         r = 1;
     }
-    if (r < 0)
+    if (r < 0 || isnan(r))
     {
         r = 0;
     }
@@ -44,7 +45,7 @@ void color::normaliseF()
     {
         g = 1;
     }
-    if (g < 0)
+    if (g < 0 || isnan(g))
     {
         g = 0;
     }
@@ -52,7 +53,7 @@ void color::normaliseF()
     {
         b = 1;
     }
-    if (b < 0)
+    if (b < 0 || isnan(b))
     {
         b = 0;
     }

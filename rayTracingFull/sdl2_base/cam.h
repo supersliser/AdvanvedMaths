@@ -16,13 +16,11 @@ class cam {
         point pos;
         vec dir;
         float fov;
-        float nearClip;
-        float farClip;
         bool orthographic;
 
-        cam(point pos, vec dir, float fov, float nearClip, float farClip, bool orthographic);
+        cam(point pos, vec dir, float fov, bool orthographic);
         cam();
 
-        void draw(SDL_Renderer *ren, light l, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount);
-        void sample(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight);
+        void draw(SDL_Renderer *ren, light l, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive);
+        void sample(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax);
 };

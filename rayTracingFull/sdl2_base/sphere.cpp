@@ -22,12 +22,12 @@ hit sphere::traceObj(point p, vec i)
 {
     hit* out = new hit();
 	point O = p;
+	// printf("(%f, %f, %f)\n", O.x, O.y, O.z);
 	vec D = i;
-	point C = pos;
 	point L;
-	L.x = C.x - O.x;
-	L.y = C.y - O.y;
-	L.z = C.z - O.z;
+	L.x = pos.x - O.x;
+	L.y = pos.y - O.y;
+	L.z = pos.z - O.z;
 	float tca = L.dp(D);
 	float d = sqrt(L.dp(L) - (tca * tca));
 	float thc = sqrt((r * r) - (d * d));
@@ -51,6 +51,7 @@ hit sphere::traceObj(point p, vec i)
 		out->obj = this;
 		out->dist = t0;
 		out->P = P;
+		// printf("Hit at (%f, %f, %f)\n", out->P.x, out->P.y, out->P.z);
 	}
 	return *out;
 }

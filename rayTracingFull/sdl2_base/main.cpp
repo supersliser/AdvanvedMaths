@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	fflush(stdout);
 
 	const int MOVE = 10;
-	cam *c = new cam(point(0, 0, -100), vec(0, 0, 1), 20, 1, 1000000, 1);
+	cam *c = new cam(point(0, 0, -100), vec(0, 0, 1), 70, 1);
 	// c->pos.x = 0;
 	// c->pos.y = 0;
 	// c->pos.z = -100;
@@ -47,53 +47,54 @@ int main(int argc, char *argv[])
 	printf("Cam Generated\n");
 
 	light l;
-	l.brightness = 10000;
+	l.brightness = 1000000;
 	l.col.r = 1;
 	l.col.g = 1;
 	l.col.b = 1;
-	l.pos.x = -500;
-	l.pos.y = 0;
+	l.pos.x = 500;
+	l.pos.y = -5000;
 	l.pos.z = 0;
 
 	printf("Light Generated\n");
 
-	int objectCount = 20;
+	int objectCount = 10;
 
 	sphere objs[objectCount];
 
 	objs[0] = sphere();
 	objs[0].pos.x = 0;
 	objs[0].pos.y = 0;
-	objs[0].pos.z = 20;
+	objs[0].pos.z = -20;
 	objs[0].m = new mat();
-	objs[0].m->ambient.r = 1;
-	objs[0].m->ambient.g = 1;
-	objs[0].m->ambient.b = 1;
+	objs[0].m->ambient.r = 0;
+	objs[0].m->ambient.g = 0;
+	objs[0].m->ambient.b = 0;
 	objs[0].m->diffuse.r = 1;
 	objs[0].m->diffuse.g = 0;
 	objs[0].m->diffuse.b = 0;
 	objs[0].m->specular.r = 1;
 	objs[0].m->specular.g = 1;
 	objs[0].m->specular.b = 1;
-	objs[0].m->roughness = 1;
-	objs[0].m->reflectivity = 0;
+	objs[0].m->roughness = 0.2;
+	objs[0].m->reflectivity = 1;
 	objs[0].r = 100;
 	objs[0].id = 0;
 	objs[1] = sphere();
 	objs[1].pos.x = -500;
 	objs[1].pos.y = 0;
 	objs[1].pos.z = -50;
-	objs[1].m->ambient.r = 1;
-	objs[1].m->ambient.g = 1;
-	objs[1].m->ambient.b = 1;
+	objs[1].m = new mat();
+	objs[1].m->ambient.r = 0;
+	objs[1].m->ambient.g = 0;
+	objs[1].m->ambient.b = 0;
 	objs[1].m->diffuse.r = 1;
 	objs[1].m->diffuse.g = 0;
 	objs[1].m->diffuse.b = 1;
 	objs[1].m->specular.r = 1;
 	objs[1].m->specular.g = 1;
 	objs[1].m->specular.b = 1;
-	objs[1].m->roughness = 1;
-	objs[1].m->reflectivity = 0;
+	objs[1].m->roughness = 0.1;
+	objs[1].m->reflectivity = 1;
 	objs[1].r = 50;
 	objs[1].id = 1;
 
@@ -102,25 +103,26 @@ int main(int argc, char *argv[])
 		objs[i] = sphere();
 		objs[i].pos.x = (rand() % 1000) - 500;
 		objs[i].pos.y = (rand() % 1000) - 500;
-		objs[i].pos.z = (rand() % 200) + 100;
-		objs[i].m->ambient.r = rand() / RAND_MAX;
-		objs[i].m->ambient.g = rand() / RAND_MAX;
-		objs[i].m->ambient.b = rand() / RAND_MAX;
-		objs[i].m->diffuse.r = rand() / RAND_MAX;
-		objs[i].m->diffuse.g = rand() / RAND_MAX;
-		objs[i].m->diffuse.b = rand() / RAND_MAX;
-		objs[i].m->specular.r = rand() / RAND_MAX;
-		objs[i].m->specular.g = rand() / RAND_MAX;
-		objs[i].m->specular.b = rand() / RAND_MAX;
-		objs[i].m->roughness = rand() / RAND_MAX;
-		objs[i].m->reflectivity = rand() / RAND_MAX;
-		objs[i].r = (rand() % 130) + 20;
+		objs[i].pos.z = (rand() % 200);
+		objs[i].m = new mat();
+		objs[i].m->ambient.r = 0;
+		objs[i].m->ambient.g = 0;
+		objs[i].m->ambient.b = 0;
+		objs[i].m->diffuse.r = (float)rand() / RAND_MAX;
+		objs[i].m->diffuse.g = (float)rand() / RAND_MAX;
+		objs[i].m->diffuse.b = (float)rand() / RAND_MAX;
+		objs[i].m->specular.r = 1;
+		objs[i].m->specular.g = 1;
+		objs[i].m->specular.b = 1;
+		objs[i].m->roughness = (float)rand() / RAND_MAX;
+		objs[i].m->reflectivity = (float)rand() / RAND_MAX;
+		objs[i].r = (rand() % 230) + 20;
 		objs[i].id = i;
 		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
 		// printf("draw %d object\n", i + 1);
 	}
 	printf("Objects Generated\n");
-	c->draw(ren, l, objs, objectCount, 1000, 1000, 1);
+	c->draw(ren, l, objs, objectCount, 1000, 1000, 3, 1, 0);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -134,22 +136,22 @@ int main(int argc, char *argv[])
 				switch (event.key.keysym.sym)
 				{
 				case SDLK_w:
-					c->pos.z += MOVE;
+					c->pos.z += MOVE * c->dir.z;
 					break;
 				case SDLK_a:
-					c->pos.x -= MOVE;
+					c->pos.x -= MOVE * c->dir.z;
 					break;
 				case SDLK_s:
-					c->pos.z -= MOVE;
+					c->pos.z -= MOVE * c->dir.z;
 					break;
 				case SDLK_d:
-					c->pos.x += MOVE;
+					c->pos.x += MOVE * c->dir.z;
 					break;
 				case SDLK_SPACE:
-					c->pos.y -= MOVE;
+					c->pos.y -= MOVE * c->dir.z;
 					break;
 				case SDLK_LSHIFT:
-					c->pos.y += MOVE;
+					c->pos.y += MOVE * c->dir.z;
 					break;
 				case SDLK_ESCAPE:
 					finished = 1;
@@ -164,7 +166,7 @@ int main(int argc, char *argv[])
 					c->orthographic = !c->orthographic;
 					break;
 				}
-				c->draw(ren, l, objs, objectCount, 1000, 1000, 1);
+				c->draw(ren, l, objs, objectCount, 1000, 1000, 3, 0, 0);
 				break;
 
 			case SDL_QUIT:
@@ -174,9 +176,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	SDL_Surface *sectionSurface = SDL_CreateRGBSurface(0, 1000, 1000, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
-	SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
-	IMG_SaveJPG(sectionSurface, "./box.jpg", 100);
+	// SDL_Surface *sectionSurface = SDL_CreateRGBSurface(0, 1000, 1000, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+	// SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
+	// IMG_SaveJPG(sectionSurface, "./box.jpg", 100);
 
 	return 0;
 }

@@ -9,22 +9,18 @@ cam::cam()
     dir.y = 0;
     dir.z = 1;
     fov = 20;
-    nearClip = 1;
-    farClip = 1000000;
     orthographic = 0;
 }
 
-cam::cam(point pos, vec dir, float fov, float nearClip, float farClip, bool orthographic)
+cam::cam(point pos, vec dir, float fov, bool orthographic)
 {
     this->pos = pos;
     this->dir = dir;
     this->fov = fov;
-    this->nearClip = nearClip;
-    this->farClip = farClip;
     this->orthographic = orthographic;
 }
 
-void cam::draw(SDL_Renderer *ren, light l, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount)
+void cam::draw(SDL_Renderer *ren, light l, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive)
 {
     SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
     SDL_RenderClear(ren);
@@ -37,20 +33,22 @@ void cam::draw(SDL_Renderer *ren, light l, sphere *objs, int objCount, int maxWi
             {
                 tempCamera.pos.x += x;
                 tempCamera.pos.y += y;
-                tempCamera.dir.x = 0;
-                tempCamera.dir.y = 0;
-                tempCamera.dir.z = 1;
+                tempCamera.pos.z = pos.z;
             }
             else
             {
                 tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 90);
                 tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 90);
-                tempCamera.dir.z = (tempCamera.dir.z) * (tempCamera.fov / 90);
+                tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 90);
                 tempCamera.dir.Normalise();
             }
-            tempCamera.sample(ren, tempCamera, l, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight);
+            tempCamera.sample(ren, tempCamera, l, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax);
             // printf("Sampled (%d, %d)\n", x, y);
             fflush(stdout);
+            if (progressive)
+            {
+                SDL_RenderPresent(ren);
+            }
         }
     }
     SDL_RenderPresent(ren);
@@ -58,58 +56,62 @@ void cam::draw(SDL_Renderer *ren, light l, sphere *objs, int objCount, int maxWi
     fflush(stdout);
 }
 
-void cam::sample(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight)
+void cam::sample(SDL_Renderer *ren, cam c, light l, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax)
 {
-    color output[(int)sampleAmount - 1][(int)sampleAmount - 1];
+    // printf("Sampling (%d, %d)\n", x, y);
+    color output[(int)sampleAmount][(int)sampleAmount];
     for (float u = 0.0; u < 1; u += 1 / (sampleAmount))
     {
-        for (float v = 0.0; v < 1; v += 1 / sampleAmount)
+        for (float v = 0.0; v < 1; v += 1 / (sampleAmount))
         {
             cam tempCam = c;
             tempCam.pos.x += u;
             tempCam.pos.y += v;
             hit *besthit = new hit();
-            besthit->P.z = 10000000000;
+            besthit->dist = 100000000000000;
+            // printf("Temp Cam: (%f, %f, %f) towards (%f, %f, %f)\n", tempCam.pos.x, tempCam.pos.y, tempCam.pos.z, tempCam.dir.x, tempCam.dir.y, tempCam.dir.z);
             for (int i = 0; i < objCount; i++)
             {
                 hit h = objs[i].traceObj(tempCam.pos, tempCam.dir);
                 if (h.hitSuccess && h.dist < besthit->dist)
                 {
-                    printf("Hit\n");
+                    // printf("Hit\n");
                     *besthit = h;
                 }
             }
+            // printf("Sampling (%f, %f)\n", x, y);
             if (besthit->hitSuccess)
             {
-                printf("Hit success at (%f, %f)\n", besthit->P.x, besthit->P.y);
-                fflush(stdout);
-                output[(int)(u * sampleAmount)][(int)(v * sampleAmount)] = besthit->obj->m->shade(tempCam, l, *besthit, objs, objCount, 0, 2);
+                // printf("Hit success at (%f, %f)\n", besthit->P.x, besthit->P.y);
+                // fflush(stdout);
+                output[(int)(u * sampleAmount)][(int)(v * sampleAmount)] = besthit->obj->m->shade(tempCam, l, *besthit, objs, objCount, 0, recursionMax);
             }
             else
             {
                 output[(int)(u * sampleAmount)][(int)(v * sampleAmount)] = color(0, 0, 0);
             }
+            // printf("Sampling (%f, %f)\n", x, y);
             // printf("Sample (%d, %d) color (%f, %f, %f)\n", (int)(u * sampleAmount), (int)(v * sampleAmount), output[(int)(u * sampleAmount)][(int)(v * sampleAmount)].r, output[(int)(u * sampleAmount)][(int)(v * sampleAmount)].g, output[(int)(u * sampleAmount)][(int)(v * sampleAmount)].b);
         }
     }
-    color *pixel = new color();
+    color pixel = color();
     for (int i = 0; i < sampleAmount; i++)
     {
         for (int j = 0; j < sampleAmount; j++)
         {
-            pixel->r += output[i][j].r;
-            pixel->g += output[i][j].g;
-            pixel->b += output[i][j].b;
+            pixel.r += output[i][j].r;
+            pixel.g += output[i][j].g;
+            pixel.b += output[i][j].b;
         }
     }
-    // printf("Pixel (%d, %d) color (%f, %f, %f)\n", x, y, pixel->r, pixel->g, pixel->b);
-    pixel->r = pixel->r / (sampleAmount * sampleAmount);
-    pixel->g = pixel->g / (sampleAmount * sampleAmount);
-    pixel->b = pixel->b / (sampleAmount * sampleAmount);
-    // printf("Pixel (%d, %d) color (%f, %f, %f)\n", x, y, pixel->r, pixel->g, pixel->b);
-    pixel->normalise255();
-    // printf("Drawing Colour (%d, %d, %d)\n", pixel->r, pixel->g, pixel->b);
+    // printf("Pixel (%f, %f) color (%f, %f, %f)\n", x, y, pixel.r, pixel.g, pixel.b);
+    pixel.r = pixel.r / (sampleAmount * sampleAmount);
+    pixel.g = pixel.g / (sampleAmount * sampleAmount);
+    pixel.b = pixel.b / (sampleAmount * sampleAmount);
+    // printf("Pixel (%f, %f) color (%f, %f, %f)\n", x, y, pixel.r, pixel.g, pixel.b);
+    pixel.normaliseF();
+    // printf("Drawing Colour (%f, %f, %f) at (%f, %f)\n", pixel.r, pixel.g, pixel.b, x, y);
     fflush(stdout);
-    SDL_SetRenderDrawColor(ren, pixel->r, pixel->g, pixel->b, 255);
+    SDL_SetRenderDrawColor(ren, pixel.r * 255, pixel.g * 255, pixel.b * 255, 255);
     SDL_RenderDrawPoint(ren, x + maxWidth / 2, y + maxHeight / 2);
 }

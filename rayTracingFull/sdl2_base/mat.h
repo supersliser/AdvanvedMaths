@@ -29,4 +29,6 @@ public:
     color shade(cam c, light l, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax);
 
     color reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light l, int recursionCount, int recursionMax);
+
+    void logMat();
 };
