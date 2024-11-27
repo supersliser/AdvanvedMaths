@@ -1,5 +1,4 @@
 #include "light.h"
-#include "vec.h"
 
 light::light(point pos, color col, float brightness)
 {
@@ -21,10 +20,10 @@ light::light() {
 bool light::calculateShadows(hit h, sphere *sphereObjs, int sphereCount) {
     vec lDir;
     lDir = this->pos.sub(h.P);
-    lDir = Normalise(lDir);
+    lDir = lDir.Normalise();
     for (int i = 0; i < sphereCount; i++) {
-        hit temp = traceObj(h.P, lDir, sphereObjs[i]);
-        if (temp.hit == 1 && temp.dist < h.dist && temp.obj.id != h.obj.id) {
+        hit temp = sphereObjs[i].traceObj(h.P, lDir);
+        if (temp.hitSuccess && temp.dist < h.dist && temp.obj->id != h.obj->id) {
             return 1;
         }
     }

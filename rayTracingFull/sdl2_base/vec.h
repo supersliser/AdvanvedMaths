@@ -1,3 +1,5 @@
+#pragma once
+
 class vec {
     public:
         float x;

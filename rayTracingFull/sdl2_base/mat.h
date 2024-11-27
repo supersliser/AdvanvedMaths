@@ -1,17 +1,28 @@
+#pragma once
+
 #include "color.h"
+#include "hit.h"
 #include "sphere.h"
 #include "cam.h"
 #include "light.h"
-#include "hit.h"
 
-class mat {
+class cam;
+class light;
+class sphere;
+class hit;
+class color;
+class point;
+class vec;
+
+class mat
+{
 public:
     color diffuse;
     color specular;
     color ambient;
     float reflectivity;
     float roughness;
-    
+
     mat(color diffuse, color specular, color ambient, float reflectivity, float roughness);
     mat();
 

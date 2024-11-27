@@ -46,6 +46,11 @@ float point::dp(point i)
     return this->x * i.x + this->y * i.y + this->z * i.z;
 }
 
+float point::dp(vec i)
+{
+    return this->x * i.x + this->y * i.y + this->z * i.z;
+}
+
 point point::cp(point i)
 {
     point o;

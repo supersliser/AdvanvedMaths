@@ -1,5 +1,5 @@
 #include "vec.h"
-#include "math.h"
+#include <math.h>
 
 vec::vec(float x, float y, float z)
 {

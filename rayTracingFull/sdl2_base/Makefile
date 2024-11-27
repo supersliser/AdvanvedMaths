@@ -5,7 +5,7 @@ LDFLAGS = -lSDL2 -lSDL2_image
 
 # Project name and source files
 TARGET = main
-SRC = main.cpp
+SRC = main.cpp cam.cpp mat.cpp sphere.cpp hit.cpp light.cpp point.cpp vec.cpp color.cpp
 
 # Build rules
 all: $(TARGET)

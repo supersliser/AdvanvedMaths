@@ -1,4 +1,10 @@
+#pragma once
+
 #include "vec.h"
+
+class vec;
+
+
 class point {
     public:
         float x;
@@ -12,6 +18,7 @@ class point {
         vec sub(point i);
         point mult(point i);
         float dp(point i);
+        float dp(vec i);
         point cp(point i);
 
 };

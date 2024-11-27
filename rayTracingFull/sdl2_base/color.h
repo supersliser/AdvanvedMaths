@@ -1,4 +1,8 @@
+#pragma once
+
 #include "vec.h"
+
+class vec;
 class color {
 public:
     float r;
