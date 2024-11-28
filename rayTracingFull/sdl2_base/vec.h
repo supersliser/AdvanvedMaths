@@ -20,4 +20,8 @@ class vec {
         float dp(vec i);
         vec Normalise();
         vec cp(vec i);
+
+        float length();
+
+        vec randomRay();
 };

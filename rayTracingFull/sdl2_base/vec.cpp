@@ -1,5 +1,6 @@
 #include "vec.h"
 #include <math.h>
+#include <stdio.h>
 
 vec::vec(float x, float y, float z)
 {
@@ -90,5 +91,24 @@ vec vec::mult(float i)
     o.x = this->x * i;
     o.y = this->y * i;
     o.z = this->z * i;
+    return o;
+}
+
+float vec::length()
+{
+    return sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+}
+
+vec vec::randomRay()
+{
+    vec o;
+    while (o.z < 1 && o.length() >= 1) {
+        o.x = ((float)rand() / (float)RAND_MAX * 2) - 1;
+        o.y = ((float)rand() / (float)RAND_MAX * 2) - 1;
+        o.z = ((float)rand() / (float)RAND_MAX * 2) - 1;
+    }
+    o.Normalise();
+    // printf("Ray Generated\n");
+    // fflush(stdout);
     return o;
 }

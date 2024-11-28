@@ -121,18 +121,9 @@ color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int
 	r.y = i.y - 2 * (i.dp(normal) * normal.y);
 	r.z = i.z - 2 * (i.dp(normal) * normal.z);
 
-    hit *bestHit = new hit();
-    bestHit->dist = 10000000000;
-	for (int i = 0; i < objCount; i++)
-	{
-		hit h = objs[i].traceObj(p, r);
-		if (h.hitSuccess && h.obj->id != current.id)
-		{
-            *bestHit = h;
-			// printf("object\n");
-		}
-	}
-    if (bestHit->hitSuccess)
+    hit h = cam().TraceObjs(cam(p, r, 1, false), objs, objCount);
+
+    if (h.hitSuccess)
     {
         cam c;
         c.pos = p;
@@ -141,7 +132,7 @@ color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int
         if (recursionCount < recursionMax)
         {
             // printf("recursion\n");
-            return bestHit->obj->m->shade(c, l, *bestHit, objs, objCount, recursionCount + 1, recursionMax);
+            return h.obj->m->shade(c, l, h, objs, objCount, recursionCount + 1, recursionMax);
         }
     }
     // printf("failed\n");
