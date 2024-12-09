@@ -1,5 +1,6 @@
 #include "color.h"
 #include <math.h>
+#include <stdio.h>
 
 color::color(float r, float g, float b)
 {
@@ -29,6 +30,10 @@ void color::toCol(vec i)
     r = i.x;
     g = i.y;
     b = i.z;
+}
+
+bool color::notBlack() {
+    return r != 0 && g != 0 && b != 0;
 }
 
 void color::normaliseF()
@@ -85,4 +90,8 @@ void color::normalise255()
     {
         b = 0;
     }
+}
+
+void color::print() {
+    printf("%f, %f, %f\n", r, g, b);
 }

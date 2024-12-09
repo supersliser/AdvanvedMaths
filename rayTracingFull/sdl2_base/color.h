@@ -15,4 +15,6 @@ public:
     void toCol(vec i);
     void normaliseF();
     void normalise255();
+    bool notBlack();
+    void print();
 };

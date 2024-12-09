@@ -34,12 +34,15 @@ int main(int argc, char *argv[])
 	fflush(stdout);
 
 	const int samples = 2;
-	const int reflectionBounces = 2;
-	const int objectCount = 10;
-	const SampleType sampleType = RANDOM;
+	const int reflectionBounces = 1;
+	const int objectCount = 50;
+	const SampleType sampleType = IMPORTANCE;
 	const bool progressiveRender = 1;
-	const int passes = 150;
-	const bool trueRandom = 1;
+	const int passes = 200;
+	const bool trueRandom = 0;
+	const int pixelSize = 1;
+	const int lightCount = 1;
+	const int importanceStart = 5;
 
 	if (trueRandom)
 	{
@@ -59,15 +62,32 @@ int main(int argc, char *argv[])
 	// c->farClip = 1000000;
 	// c->orthographic = 1;
 	printf("Cam Generated\n");
+	light ls[lightCount];
 
-	light l;
-	l.brightness = 99999999;
-	l.col.r = 1;
-	l.col.g = 1;
-	l.col.b = 1;
-	l.pos.x = 500;
-	l.pos.y = 0;
-	l.pos.z = 0;
+	if (!trueRandom)
+	{
+		ls[0].brightness = 99999999999;
+		ls[0].col.r = 1;
+		ls[0].col.g = 1;
+		ls[0].col.b = 1;
+		ls[0].pos.x = 500;
+		ls[0].pos.y = 0;
+		ls[0].pos.z = 0;
+	}
+
+	for (int i = trueRandom ? 0 : 1; i < lightCount; i++)
+	{
+		ls[i].brightness = 99999999;
+		ls[i].col.r = 1;
+		ls[i].col.g = 1;
+		ls[i].col.b = 1;
+		// ls[i].pos.x = (random() % 2000) - 1000;
+		// ls[i].pos.y = (random() % 2000) - 500;
+		// ls[i].pos.z = (random() % 2000) - 1500;
+		ls[i].pos.x = random() / (double)RAND_MAX * 2000 - 1000;
+		ls[i].pos.y = random() / (double)RAND_MAX * 2000 - 500;
+		ls[i].pos.z = random() / (double)RAND_MAX * 2000 - 1000;
+	}
 
 	printf("Light Generated\n");
 
@@ -78,7 +98,7 @@ int main(int argc, char *argv[])
 		objs[0] = sphere();
 		objs[0].pos.x = 0;
 		objs[0].pos.y = 0;
-		objs[0].pos.z = -20;
+		objs[0].pos.z = 0;
 		objs[0].m = new mat();
 		objs[0].m->ambient.r = 0;
 		objs[0].m->ambient.g = 0;
@@ -137,7 +157,7 @@ int main(int argc, char *argv[])
 		// printf("draw %d object\n", i + 1);
 	}
 	printf("Objects Generated\n");
-	c->draw(ren, l, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes);
+	c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -182,7 +202,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 				c->printCam();
-				c->draw(ren, l, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes);
+				c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart);
 				break;
 
 			case SDL_QUIT:

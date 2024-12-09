@@ -26,7 +26,7 @@ int middleSquare(int x)
 int lcg(int a, int m, int c, int x) {
 	int out = (a * x + c) % m;
 
-	printf("%f\n", out);
+	printf("%d\n", out);
 	return out;
 }
 
@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
 
 	for (int x = start; x < 1000 + start; x++) {
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		// SDL_RenderDrawPoint(renderer, x - start, 1000 - ((lcg(8121, 134456, 28411, x)) % 1000));
+		SDL_RenderDrawPoint(renderer, x - start, 1000 - ((lcg(8121, 134456, 28411, x)) % 1000));
 		// SDL_RenderDrawPoint(renderer, x - start, 1000 - ((middleSquare(x)) % 1000));
-		SDL_RenderDrawPoint(renderer, x - start, 1000 - ((bbs(x, 107, 191)) % 1000));
+		// SDL_RenderDrawPoint(renderer, x - start, 1000 - ((bbs(x, 107, 191)) % 1000));
 
 	}
 

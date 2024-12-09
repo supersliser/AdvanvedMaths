@@ -1,7 +1,8 @@
 #include "mat.h"
 #include <math.h>
 
-mat::mat() {
+mat::mat()
+{
     diffuse.r = 0;
     diffuse.g = 0;
     diffuse.b = 0;
@@ -15,7 +16,8 @@ mat::mat() {
     roughness = 0;
 }
 
-mat::mat(color diffuse, color specular, color ambient, float reflectivity, float roughness) {
+mat::mat(color diffuse, color specular, color ambient, float reflectivity, float roughness)
+{
     this->diffuse = diffuse;
     this->specular = specular;
     this->ambient = ambient;
@@ -23,103 +25,161 @@ mat::mat(color diffuse, color specular, color ambient, float reflectivity, float
     this->roughness = roughness;
 }
 
-color mat::shade(cam c, light l, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax) {
-    //diffusion
-    color diffuse;
+color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax)
+{
+    // diffusion
+    color diffuse[lCount];
+    color finalDiffuse;
 
-    vec lDir;
-    lDir.x = l.pos.x - h.P.x;
-    lDir.y = l.pos.y - h.P.y;
-    lDir.z = l.pos.z - h.P.z;
-    lDir = lDir.Normalise();
-    float diff = lDir.dp(h.obj->getNormal(h.P));
-    if (diff < 0.0f)
+    for (int i = 0; i < lCount; i++)
     {
-        diff = 0.0f;
+        vec lDir;
+        lDir.x = ls[i].pos.x - h.P.x;
+        lDir.y = ls[i].pos.y - h.P.y;
+        lDir.z = ls[i].pos.z - h.P.z;
+        lDir = lDir.Normalise();
+        float diff = lDir.dp(h.obj->getNormal(h.P));
+        if (diff < 0.0f)
+        {
+            diff = 0.0f;
+        }
+        if (diff > 1.0f)
+        {
+            diff = 1.0f;
+        }
+        diffuse[i].r = diff * ls[i].col.r * this->diffuse.r;
+        diffuse[i].g = diff * ls[i].col.g * this->diffuse.g;
+        diffuse[i].b = diff * ls[i].col.b * this->diffuse.b;
+        // printf("%f, %f, %f\n", diffuse.r, diffuse.g, diffuse.b);
     }
-    if (diff > 1.0f)
-    {
-        diff = 1.0f;
-    }
-    diffuse.r = diff * l.col.r * this->diffuse.r;
-    diffuse.g = diff * l.col.g * this->diffuse.g;
-    diffuse.b = diff * l.col.b * this->diffuse.b;
-    // printf("%f, %f, %f\n", diffuse.r, diffuse.g, diffuse.b);
 
-    //specular
-    color specular;
-    vec H;
-    H.x = (c.dir.x + lDir.x) / 2;
-    H.y = (c.dir.y + lDir.y) / 2;
-    H.z = (c.dir.z + lDir.z) / 2;
-    H = H.Normalise();
-    float spec = H.dp(h.obj->getNormal(h.P));
-    spec = pow(spec, 1/this->roughness);
-    if (spec < 0.0f)
+    finalDiffuse.r = 0;
+    finalDiffuse.g = 0;
+    finalDiffuse.b = 0;
+    for (int i = 0; i < lCount; i++)
     {
-        spec = 0.0f;
+        finalDiffuse.r += diffuse[i].r;
+        finalDiffuse.g += diffuse[i].g;
+        finalDiffuse.b += diffuse[i].b;
     }
-    if (spec > 1.0f)
+    finalDiffuse.r = finalDiffuse.r / lCount;
+    finalDiffuse.g = finalDiffuse.g / lCount;
+    finalDiffuse.b = finalDiffuse.b / lCount;
+
+    // printf("diffuse: %f, %f, %f\n", finalDiffuse.r, finalDiffuse.g, finalDiffuse.b);
+
+    // specular
+    color specular[lCount];
+    color finalSpecular;
+
+    for (int i = 0; i < lCount; i++)
     {
-        spec = 1.0f;
+        vec H;
+        vec lDir;
+        lDir.x = ls[i].pos.x - h.P.x;
+        lDir.y = ls[i].pos.y - h.P.y;
+        lDir.z = ls[i].pos.z - h.P.z;
+        H.x = (c.dir.x + lDir.x) / 2;
+        H.y = (c.dir.y + lDir.y) / 2;
+        H.z = (c.dir.z + lDir.z) / 2;
+        H = H.Normalise();
+        float spec = H.dp(h.obj->getNormal(h.P));
+        spec = pow(spec, 1 / this->roughness);
+        if (spec < 0.0f)
+        {
+            spec = 0.0f;
+        }
+        if (spec > 1.0f)
+        {
+            spec = 1.0f;
+        }
+        specular[i].r = spec * this->specular.r;
+        specular[i].g = spec * this->specular.g;
+        specular[i].b = spec * this->specular.b;
     }
-    specular.r = spec * this->specular.r;
-    specular.g = spec * this->specular.g;
-    specular.b = spec * this->specular.b;
-    // vec rDir;
-    // rDir.x = -c.dir.x + 2 * (c.dir.dp(h.obj->getNormal(h.P)) * h.obj->getNormal(h.P).x);
-    // rDir.y = -c.dir.y + 2 * (c.dir.dp(h.obj->getNormal(h.P)) * h.obj->getNormal(h.P).y);
-    // rDir.z = -c.dir.z + 2 * (c.dir.dp(h.obj->getNormal(h.P)) * h.obj->getNormal(h.P).z);
-    // rDir = rDir.Normalise();
-    // float spec = rDir.dp(lDir);
-    // if (spec < 0.0f)
-    // {
-    //     spec = 0.0f;
-    // }
-    // if (spec > 1.0f)
-    // {
-    //     spec = 1.0f;
-    // }
-    // specular.r = spec * l.col.r * this->specular.r;
-    // specular.g = spec * l.col.g * this->specular.g;
-    // specular.b = spec * l.col.b * this->specular.b;
-    // printf("%f, %f, %f\n", specular.r, specular.g, specular.b);
 
-    //ambient
-    color ambient;
-    ambient.r = l.col.r * this->ambient.r;
-    ambient.g = l.col.g * this->ambient.g;
-    ambient.b = l.col.b * this->ambient.b;
-    // printf("%f, %f, %f\n", ambient.r, ambient.g, ambient.b);
+    finalSpecular.r = 0;
+    finalSpecular.g = 0;
+    finalSpecular.b = 0;
+    for (int i = 0; i < lCount; i++)
+    {
+        finalSpecular.r += specular[i].r;
+        finalSpecular.g += specular[i].g;
+        finalSpecular.b += specular[i].b;
+    }
+    finalSpecular.r = finalSpecular.r / lCount;
+    finalSpecular.g = finalSpecular.g / lCount;
+    finalSpecular.b = finalSpecular.b / lCount;
 
-    //reflection
+    // printf("%f, %f, %f\n", finalSpecular.r, finalSpecular.g, finalSpecular.b);
+
+    // ambient
+    color ambient[lCount];
+    color finalAmbient;
+    for (int i = 0; i < lCount; i++)
+    {
+        ambient[i].r = ls[i].col.r * this->ambient.r;
+        ambient[i].g = ls[i].col.g * this->ambient.g;
+        ambient[i].b = ls[i].col.b * this->ambient.b;
+    }
+
+    finalAmbient.r = 0;
+    finalAmbient.g = 0;
+    finalAmbient.b = 0;
+    for (int i = 0; i < lCount; i++)
+    {
+        finalAmbient.r += ambient[i].r;
+        finalAmbient.g += ambient[i].g;
+        finalAmbient.b += ambient[i].b;
+    }
+    finalAmbient.r = finalAmbient.r / lCount;
+    finalAmbient.g = finalAmbient.g / lCount;
+    finalAmbient.b = finalAmbient.b / lCount;
+
+    // printf("%f, %f, %f\n", finalAmbient.r, finalAmbient.g, finalAmbient.b);
+
+    // reflection
     color reflection;
-    reflection.r = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, l, recursionCount, recursionMax).r;
-    reflection.g = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, l, recursionCount, recursionMax).g;
-    reflection.b = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, l, recursionCount, recursionMax).b;
+    reflection.r = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax).r;
+    reflection.g = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax).g;
+    reflection.b = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax).b;
     // printf("%f, %f, %f\n", reflection.r, reflection.g, reflection.b);
 
-    //shadow
-    bool shadow = l.calculateShadows(h, objs, objCount);
-    // printf("%d\n", shadow);
-    //add
+    // shadow
+    bool shadows[lCount];
+    for (int i = 0; i < lCount; i++)
+    {
+        shadows[i] = ls[i].calculateShadows(h, objs, objCount);
+    }
+    float shadow = lCount;
+    for (int i = 0; i < lCount; i++)
+    {
+        if (shadows[i])
+        {
+            shadow--;
+        }
+    }
+    shadow /= lCount;
+    // printf("%f\n", shadow);
+    // add
     color output;
-    diffuse.normaliseF();
-    specular.normaliseF();
-    ambient.normaliseF();
+    finalDiffuse.normaliseF();
+    finalSpecular.normaliseF();
+    finalAmbient.normaliseF();
     reflection.normaliseF();
-    output.r = ((diffuse.r + specular.r + ambient.r + reflection.r) / 4) * (shadow ? 0.0 : 1.0);
-    output.g = ((diffuse.g + specular.g + ambient.g + reflection.g) / 4) * (shadow ? 0.0 : 1.0);
-    output.b = ((diffuse.b + specular.b + ambient.b + reflection.b) / 4) * (shadow ? 0.0 : 1.0);
+    output.r = ((finalDiffuse.r + finalSpecular.r + finalAmbient.r + reflection.r / 4) * shadow);
+    output.g = ((finalDiffuse.g + finalSpecular.g + finalAmbient.g + reflection.g / 4) * shadow);
+    output.b = ((finalDiffuse.b + finalSpecular.b + finalAmbient.b + reflection.b / 4) * shadow);
     // printf("%f, %f, %f\n", output.r, output.g, output.b);
     return output;
 }
 
-color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light l, int recursionCount, int recursionMax) {
+color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light *ls, int lCount, int recursionCount, int recursionMax)
+{
     vec r;
     r.x = i.x - 2 * (i.dp(normal) * normal.x);
-	r.y = i.y - 2 * (i.dp(normal) * normal.y);
-	r.z = i.z - 2 * (i.dp(normal) * normal.z);
+    r.y = i.y - 2 * (i.dp(normal) * normal.y);
+    r.z = i.z - 2 * (i.dp(normal) * normal.z);
 
     hit h = cam().TraceObjs(cam(p, r, 1, false), objs, objCount);
 
@@ -132,18 +192,19 @@ color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int
         if (recursionCount < recursionMax)
         {
             // printf("recursion\n");
-            return h.obj->m->shade(c, l, h, objs, objCount, recursionCount + 1, recursionMax);
+            return h.obj->m->shade(c, ls, lCount, h, objs, objCount, recursionCount + 1, recursionMax);
         }
     }
     // printf("failed\n");
-	color o;
-	o.r = 0;
-	o.g = 0;
-	o.b = 0;
-	return o;
+    color o;
+    o.r = 0;
+    o.g = 0;
+    o.b = 0;
+    return o;
 }
 
-void mat::logMat() {
+void mat::logMat()
+{
     printf("diffuse: %f, %f, %f\n", this->diffuse.r, this->diffuse.g, this->diffuse.b);
     printf("specular: %f, %f, %f\n", this->specular.r, this->specular.g, this->specular.b);
     printf("ambient: %f, %f, %f\n", this->ambient.r, this->ambient.g, this->ambient.b);
