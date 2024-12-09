@@ -133,8 +133,8 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                     printf("Starting level %d importance sample\n", level);
                     if (level == importanceStart)
                     {
-                        int x = (rand() / (float)RAND_MAX) * maxWidth - 500;
-                        int y = (rand() / (float)RAND_MAX) * maxHeight - 500;
+                        int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
+                        int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
                         // printf("Starting sample at (%d, %d)\n", x, y);
                         cam tempCamera = *this;
                         if (this->orthographic)
@@ -162,7 +162,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                             for (int v = 0; v < level * pixelSize; v++)
                             {
                                 // printf("%d\n", (((y + maxHeight / 2) + v) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (x + maxWidth / 2) + u);
-                                pixels[(((y + maxHeight / 2) + v) >= maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (x + maxWidth / 2) + u] = temp;
+                                pixels[(((y + maxHeight / 2) + v) >= maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (((x + maxWidth / 2) + u) >= maxWidth ? maxWidth - 1 : (x + maxWidth / 2) + u)] = temp;
                             }
                         }
 
@@ -170,18 +170,19 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                     }
                     else
                     {
-                        cam tempCamera = *this;
+                        cam tempCamera;
                         int x = 0;
                         int y = 0;
                         do
                         {
-                            x = (rand() / (float)RAND_MAX) * (maxWidth / 2);
-                            y = (rand() / (float)RAND_MAX) * (maxHeight / 2);
+                            tempCamera = *this;
+                            x = (rand() / (float)RAND_MAX) * maxWidth - (maxWidth / 2);
+                            y = (rand() / (float)RAND_MAX) * maxHeight - (maxHeight / 2);
                             // printf("x: %d, y: %d\n", x, y);
                             if (this->orthographic)
                             {
-                                tempCamera.pos.x = x;
-                                tempCamera.pos.y = y;
+                                tempCamera.pos.x += x;
+                                tempCamera.pos.y += y;
                             }
                             else
                             {
@@ -195,14 +196,14 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                             // printf("Sampling (%d, %d)\n", tempCamera.pos.x + 500, tempCamera.pos.y + 500);
                             // printf("%d\n", (int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500)));
                             // printf("Pixel color (%f, %f, %f) at (%d, %d)\n", pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].r, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].g, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].b, x + 500, y + 500);
-                        } while (!pixels[((y + maxHeight / 2) > maxHeight ? maxHeight - 1 : y + maxHeight / 2) * maxHeight + (x + maxWidth / 2)].notBlack());
+                        } while (!pixels[((y + maxHeight / 2) >= maxHeight ? maxHeight - 1 : y + maxHeight / 2) * maxHeight + ((x + maxWidth / 2) >= maxWidth ? maxWidth - 1 : x + maxWidth / 2)].notBlack());
                         // printf("Found not black\n");
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
                         for (int u = 0; u < level * pixelSize; u++)
                         {
                             for (int v = 0; v < level * pixelSize; v++)
                             {
-                                pixels[(((y + maxHeight / 2) + v) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (x + maxWidth / 2) + u] = temp;
+                                pixels[(((y + maxHeight / 2) + v) >= maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (((x + maxWidth / 2) + u) >= maxWidth ? maxWidth - 1 : (x + maxWidth / 2) + u)] = temp;
                             }
                         }
                     }

@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
 	const int passes = 200;
 	const bool trueRandom = 0;
 	const int pixelSize = 1;
-	const int lightCount = 1;
-	const int importanceStart = 5;
+	const int lightCount = 3;
+	const int importanceStart = 30;
 
 	if (trueRandom)
 	{
