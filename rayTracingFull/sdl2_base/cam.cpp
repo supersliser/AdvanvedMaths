@@ -20,7 +20,7 @@ cam::cam(point pos, vec dir, float fov, bool orthographic)
     this->orthographic = orthographic;
 }
 
-void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart)
+void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd)
 {
     printf("Starting Draw\n");
     fflush(stdout);
@@ -123,15 +123,15 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
             pixels[i].g = 0;
             pixels[i].b = 0;
         }
-        printf("starting draw\n");
+        // printf("starting draw\n");
         for (int level = importanceStart; level > 0; level--)
         {
+                                printf("Starting level %d importance sample\n", level);
             for (int pass = 0; pass < passCount / level; pass++)
             {
                 for (int ray = 0; ray < maxWidth / level; ray++)
                 {
-                    printf("Starting level %d importance sample\n", level);
-                    if (level == importanceStart)
+                    if (level >= generationEnd)
                     {
                         int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
                         int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
@@ -209,9 +209,9 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                     }
                 }
             }
-            for (int x = 0; x < maxWidth / level; x++)
+            for (int x = 0; x < maxWidth; x++)
             {
-                for (int y = 0; y < maxHeight / level; y++)
+                for (int y = 0; y < maxHeight; y++)
                 {
                     SDL_SetRenderDrawColor(ren, pixels[y * maxWidth + x].r * 255, pixels[y * maxWidth + x].g * 255, pixels[y * maxWidth + x].b * 255, 255);
                     SDL_RenderDrawPoint(ren, x, y);
@@ -333,8 +333,8 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere 
     pixel.normaliseF();
     // printf("got pixel\n");
     // printf("%d\n", drawHere);
-    // if (drawHere)
-    // {
+    if (drawHere)
+    {
     SDL_SetRenderDrawColor(ren, pixel.r * 255, pixel.g * 255, pixel.b * 255, 255);
     // printf("Drawing Colour (%f, %f, %f) at (%d, %d)\n", pixel.r, pixel.g, pixel.b, x, y);
     for (int i = 0; i < pixelSize; i++)
@@ -345,7 +345,7 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere 
         }
     }
     // printf("drawn pixel\n");
-    // }
+    }
     // printf("Returning pixel\n");
     return pixel;
 }

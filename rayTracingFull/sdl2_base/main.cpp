@@ -39,10 +39,11 @@ int main(int argc, char *argv[])
 	const SampleType sampleType = IMPORTANCE;
 	const bool progressiveRender = 1;
 	const int passes = 200;
-	const bool trueRandom = 0;
+	const bool trueRandom = 1;
 	const int pixelSize = 1;
-	const int lightCount = 3;
+	const int lightCount = 5;
 	const int importanceStart = 30;
+	const int generationEnd = 20;
 
 	if (trueRandom)
 	{
@@ -157,7 +158,7 @@ int main(int argc, char *argv[])
 		// printf("draw %d object\n", i + 1);
 	}
 	printf("Objects Generated\n");
-	c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart);
+	c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 				c->printCam();
-				c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart);
+				c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd);
 				break;
 
 			case SDL_QUIT:
