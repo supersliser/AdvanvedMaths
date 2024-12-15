@@ -30,7 +30,7 @@ class cam {
         cam();
 
         void draw(SDL_Renderer *ren, light* l, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd);
-        color LinearSample(SDL_Renderer *ren, cam c, light* l, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize);
+        color LinearSample(SDL_Renderer *ren, cam c, light* l, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool draw);
         color RandomSample(SDL_Renderer *ren, cam c, light* l, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool drawHere);
 
         void PathTracePixel(SDL_Renderer *ren, cam c, light* l, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize);

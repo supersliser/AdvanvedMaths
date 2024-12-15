@@ -28,7 +28,6 @@ mat::mat(color diffuse, color specular, color ambient, float reflectivity, float
 color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax)
 {
     // diffusion
-    color diffuse[lCount];
     color finalDiffuse;
 
     for (int i = 0; i < lCount; i++)
@@ -47,20 +46,10 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
         {
             diff = 1.0f;
         }
-        diffuse[i].r = diff * ls[i].col.r * this->diffuse.r;
-        diffuse[i].g = diff * ls[i].col.g * this->diffuse.g;
-        diffuse[i].b = diff * ls[i].col.b * this->diffuse.b;
+        finalDiffuse.r += diff * ls[i].col.r * this->diffuse.r;
+        finalDiffuse.g += diff * ls[i].col.g * this->diffuse.g;
+        finalDiffuse.b += diff * ls[i].col.b * this->diffuse.b;
         // printf("%f, %f, %f\n", diffuse.r, diffuse.g, diffuse.b);
-    }
-
-    finalDiffuse.r = 0;
-    finalDiffuse.g = 0;
-    finalDiffuse.b = 0;
-    for (int i = 0; i < lCount; i++)
-    {
-        finalDiffuse.r += diffuse[i].r;
-        finalDiffuse.g += diffuse[i].g;
-        finalDiffuse.b += diffuse[i].b;
     }
     finalDiffuse.r = finalDiffuse.r / lCount;
     finalDiffuse.g = finalDiffuse.g / lCount;
@@ -69,7 +58,6 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
     // printf("diffuse: %f, %f, %f\n", finalDiffuse.r, finalDiffuse.g, finalDiffuse.b);
 
     // specular
-    color specular[lCount];
     color finalSpecular;
 
     for (int i = 0; i < lCount; i++)
@@ -93,19 +81,9 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
         {
             spec = 1.0f;
         }
-        specular[i].r = spec * this->specular.r;
-        specular[i].g = spec * this->specular.g;
-        specular[i].b = spec * this->specular.b;
-    }
-
-    finalSpecular.r = 0;
-    finalSpecular.g = 0;
-    finalSpecular.b = 0;
-    for (int i = 0; i < lCount; i++)
-    {
-        finalSpecular.r += specular[i].r;
-        finalSpecular.g += specular[i].g;
-        finalSpecular.b += specular[i].b;
+        finalSpecular.r += spec * this->specular.r;
+        finalSpecular.g += spec * this->specular.g;
+        finalSpecular.b += spec * this->specular.b;
     }
     finalSpecular.r = finalSpecular.r / lCount;
     finalSpecular.g = finalSpecular.g / lCount;
@@ -114,23 +92,12 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
     // printf("%f, %f, %f\n", finalSpecular.r, finalSpecular.g, finalSpecular.b);
 
     // ambient
-    color ambient[lCount];
     color finalAmbient;
     for (int i = 0; i < lCount; i++)
     {
-        ambient[i].r = ls[i].col.r * this->ambient.r;
-        ambient[i].g = ls[i].col.g * this->ambient.g;
-        ambient[i].b = ls[i].col.b * this->ambient.b;
-    }
-
-    finalAmbient.r = 0;
-    finalAmbient.g = 0;
-    finalAmbient.b = 0;
-    for (int i = 0; i < lCount; i++)
-    {
-        finalAmbient.r += ambient[i].r;
-        finalAmbient.g += ambient[i].g;
-        finalAmbient.b += ambient[i].b;
+        finalAmbient.r += ls[i].col.r * this->ambient.r;
+        finalAmbient.g += ls[i].col.g * this->ambient.g;
+        finalAmbient.b += ls[i].col.b * this->ambient.b;
     }
     finalAmbient.r = finalAmbient.r / lCount;
     finalAmbient.g = finalAmbient.g / lCount;
@@ -192,7 +159,8 @@ color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int
         if (recursionCount < recursionMax)
         {
             // printf("recursion\n");
-            return h.obj->m->shade(c, ls, lCount, h, objs, objCount, recursionCount + 1, recursionMax);
+            color temp = h.obj->m->shade(c, ls, lCount, h, objs, objCount, recursionCount + 1, recursionMax);
+            return temp;
         }
     }
     // printf("failed\n");

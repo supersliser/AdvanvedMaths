@@ -20,7 +20,7 @@ sphere::sphere()
 
 hit sphere::traceObj(point p, vec i)
 {
-    hit* out = new hit();
+    hit out;
 	point O = p;
 	// printf("(%f, %f, %f)\n", O.x, O.y, O.z);
 	vec D = i;
@@ -43,17 +43,17 @@ hit sphere::traceObj(point p, vec i)
 	// printf("(%f, %f, %f)\n", P.x, P.y, P.z);
 	if (isnan(P.x))
 	{
-		out->hitSuccess = 0;
+		out.hitSuccess = 0;
 	}
 	else
 	{
-		out->hitSuccess = 1;
-		out->obj = this;
-		out->dist = t0;
-		out->P = P;
+		out.hitSuccess = 1;
+		out.obj = this;
+		out.dist = t0;
+		out.P = P;
 		// printf("Hit at (%f, %f, %f)\n", out->P.x, out->P.y, out->P.z);
 	}
-	return *out;
+	return out;
 }
 
 vec sphere::getNormal(point P)
