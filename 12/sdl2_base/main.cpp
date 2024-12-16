@@ -31,9 +31,9 @@ int main(int argc, char *argv[])
 					for (int y = 0; y < 1000; y++)
 					{
 						float d = sqrt((x - px) * (x - px) + (y - py) * (y - py));
-						float _Complex thing = d + cexp(2 * M_PI * d * I / 1000) / (d * d);
+						float _Complex thing = 1000 + cexp(2 * M_PI * d * I / 80) / (d * d);
 						// printf("%f + %f i absolute %f at (%d, %d)\n", creal(thing) * 255 * 1000000, cimag(thing) * 255 * 1000000, cabs(thing) * 255 * 1000000, x, y);
-						SDL_SetRenderDrawColor(renderer, cimag(thing) * 255 > 255 ? 255 : creal(thing) * 255, 0, 0, 255);
+						SDL_SetRenderDrawColor(renderer, sqrt(cabs(thing)) * 255 > 255 ? 255 : sqrt(cabs(thing)) * 255, 0, 0, 255);
 						SDL_RenderDrawPoint(renderer, x, y);
 					}
 				}

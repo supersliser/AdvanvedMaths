@@ -34,16 +34,17 @@ int main(int argc, char *argv[])
 	fflush(stdout);
 
 	const int samples = 3;
-	const int reflectionBounces = 1;
-	const int objectCount = 30;
-	const SampleType sampleType = LINEAR;
-	const bool progressiveRender = 0;
+	const int reflectionBounces = 2;
+	const int objectCount = 50;
+	const SampleType sampleType = IMPORTANCE_IMPROVED;
+	const bool progressiveRender = 1;
 	const int passes = 200;
-	const bool trueRandom = 0;
+	const bool trueRandom = 1;
 	const int pixelSize = 1;
-	const int lightCount = 4;
-	const int importanceStart = 30;
-	const int generationEnd = 20;
+	const int lightCount = 10;
+	const int importanceStart = 50;
+	const int importanceVarianceSize = 10;
+	const int generationEnd = 40;
 
 	if (trueRandom)
 	{
@@ -158,7 +159,7 @@ int main(int argc, char *argv[])
 		// printf("draw %d object\n", i + 1);
 	}
 	printf("Objects Generated\n");
-	c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd);
+	c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd, importanceVarianceSize);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -203,7 +204,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 				c->printCam();
-				c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd);
+				c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd, importanceVarianceSize);
 				break;
 
 			case SDL_QUIT:

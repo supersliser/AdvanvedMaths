@@ -20,7 +20,7 @@ cam::cam(point pos, vec dir, float fov, bool orthographic)
     this->orthographic = orthographic;
 }
 
-void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd)
+void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd, int importanceVarianceSize)
 {
     printf("Starting Draw\n");
     fflush(stdout);
@@ -227,10 +227,134 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
         free(pixels);
     }
     break;
+    case IMPORTANCE_IMPROVED:
+    {
+        color *pixels = (color *)malloc(maxWidth * maxHeight * sizeof(color));
+        for (int i = 0; i < maxWidth * maxHeight; i++)
+        {
+            pixels[i].r = 0;
+            pixels[i].g = 0;
+            pixels[i].b = 0;
+        }
+        // printf("starting draw\n");
+        for (int level = importanceStart; level > 0; level--)
+        {
+            printf("Starting level %d importance sample\n", level);
+            for (int pass = 0; pass < passCount / level; pass++)
+            {
+                for (int ray = 0; ray < maxWidth / level; ray++)
+                {
+                    if (level >= generationEnd)
+                    {
+                        int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
+                        int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
+                        // printf("Starting sample at (%d, %d)\n", x, y);
+                        cam tempCamera = *this;
+                        if (this->orthographic)
+                        {
+                            tempCamera.pos.x += x;
+                            tempCamera.pos.y += y;
+                        }
+                        else
+                        {
+                            tempCamera.pos.x += x;
+                            tempCamera.pos.y += y;
+                            tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
+                            tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
+                            tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
+                            tempCamera.dir.Normalise();
+                        }
+                        // printf("Sampling (%d, %d)\n", x, y);
+                        // printf("%d\n", maxWidth * maxHeight);
+                        // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
+                        // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        // printf("Sampled successfully, applying sample to array\n");
+                        for (int u = 0; u < level * pixelSize; u++)
+                        {
+                            for (int v = 0; v < level * pixelSize; v++)
+                            {
+                                // printf("%d\n", (((y + maxHeight / 2) + v) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (x + maxWidth / 2) + u);
+                                pixels[(((y + maxHeight / 2) + v) >= maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (((x + maxWidth / 2) + u) >= maxWidth ? maxWidth - 1 : (x + maxWidth / 2) + u)] = temp;
+                            }
+                        }
+
+                        // printf("Sampled (%d, %d)\n", x, y);
+                    }
+                    else
+                    {
+                        cam tempCamera;
+                        int x = 0;
+                        int y = 0;
+                        do
+                        {
+                            tempCamera = *this;
+                            x = (rand() / (float)RAND_MAX) * maxWidth - (maxWidth / 2);
+                            y = (rand() / (float)RAND_MAX) * maxHeight - (maxHeight / 2);
+                            // printf("x: %d, y: %d\n", x, y);
+                            if (this->orthographic)
+                            {
+                                tempCamera.pos.x += x;
+                                tempCamera.pos.y += y;
+                            }
+                            else
+                            {
+                                tempCamera.pos.x += x;
+                                tempCamera.pos.y += y;
+                                tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
+                                tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
+                                tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
+                                tempCamera.dir.Normalise();
+                            }
+                            // printf("Sampling (%d, %d)\n", tempCamera.pos.x + 500, tempCamera.pos.y + 500);
+                            // printf("%d\n", (int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500)));
+                            // printf("Pixel color (%f, %f, %f) at (%d, %d)\n", pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].r, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].g, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].b, x + 500, y + 500);
+                        } while (!isImportant(&pixels, x, y, maxWidth, maxHeight, importanceVarianceSize, level));
+                        // printf("Found not black\n");
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        for (int u = 0; u < level * pixelSize; u++)
+                        {
+                            for (int v = 0; v < level * pixelSize; v++)
+                            {
+                                pixels[(((y + maxHeight / 2) + v) >= maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (((x + maxWidth / 2) + u) >= maxWidth ? maxWidth - 1 : (x + maxWidth / 2) + u)] = temp;
+                            }
+                        }
+                    }
+                }
+            }
+            for (int x = 0; x < maxWidth; x++)
+            {
+                for (int y = 0; y < maxHeight; y++)
+                {
+                    SDL_SetRenderDrawColor(ren, pixels[y * maxWidth + x].r * 255, pixels[y * maxWidth + x].g * 255, pixels[y * maxWidth + x].b * 255, 255);
+                    SDL_RenderDrawPoint(ren, x, y);
+                }
+            }
+            if (progressive)
+            {
+
+                SDL_RenderPresent(ren);
+            }
+        }
+
+        free(pixels);
+    }
+    break;
     }
     SDL_RenderPresent(ren);
     printf("rendered\n");
     fflush(stdout);
+}
+
+bool cam::isImportant(color **pixels, int x, int y, int maxWidth, int maxHeight, int importanceVarianceSize, int level) {
+    for (int xx = -importanceVarianceSize * level; xx <= importanceVarianceSize * level; xx++) {
+        for (int yy = -importanceVarianceSize * level; yy <= importanceVarianceSize * level; yy++) {
+            if (((*pixels)[((y + yy + maxHeight / 2) >= maxHeight ? maxHeight - 1 : y + maxHeight / 2) * maxHeight + ((x + xx + maxWidth / 2) >= maxWidth ? maxWidth - 1 : x + maxWidth / 2)]).notBlack()) {
+                return true;
+            }
+    }
+}
+    return false;
 }
 
 color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool draw)
