@@ -40,9 +40,9 @@ int main(int argc, char *argv[])
 	const bool progressiveRender = 1;
 	const int passes = 5000;
 	const bool trueRandom = 1;
-	const int pixelSize = 5;
-	const int lightCount = 20;
-	const int importanceStart = 50;
+	const int pixelSize = 1;
+	const int lightCount = 5;
+	const int importanceStart = 500;
 	const int importanceVarianceSize = 10;
 	const int generationEnd = 40;
 
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
 	for (int i = trueRandom ? 0 : 1; i < lightCount; i++)
 	{
-		ls[i].brightness = ((float)rand() / RAND_MAX) * MAXFLOAT;
+		ls[i].brightness = MAXFLOAT;
 		ls[i].col.r = 1;
 		ls[i].col.g = 1;
 		ls[i].col.b = 1;
