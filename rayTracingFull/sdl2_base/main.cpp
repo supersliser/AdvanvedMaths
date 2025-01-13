@@ -33,15 +33,15 @@ int main(int argc, char *argv[])
 	printf("SDL Initialized\n");
 	fflush(stdout);
 
-	const int samples = 3;
-	const int reflectionBounces = 2;
+	const int samples = 2;
+	const int reflectionBounces = 1;
 	const int objectCount = 50;
-	const SampleType sampleType = IMPORTANCE_IMPROVED;
+	const SampleType sampleType = RANDOM_SHRINKING_PIXELS;
 	const bool progressiveRender = 1;
-	const int passes = 200;
+	const int passes = 5000;
 	const bool trueRandom = 1;
-	const int pixelSize = 1;
-	const int lightCount = 10;
+	const int pixelSize = 5;
+	const int lightCount = 20;
 	const int importanceStart = 50;
 	const int importanceVarianceSize = 10;
 	const int generationEnd = 40;
@@ -79,16 +79,13 @@ int main(int argc, char *argv[])
 
 	for (int i = trueRandom ? 0 : 1; i < lightCount; i++)
 	{
-		ls[i].brightness = 99999999;
+		ls[i].brightness = ((float)rand() / RAND_MAX) * MAXFLOAT;
 		ls[i].col.r = 1;
 		ls[i].col.g = 1;
 		ls[i].col.b = 1;
-		// ls[i].pos.x = (random() % 2000) - 1000;
-		// ls[i].pos.y = (random() % 2000) - 500;
-		// ls[i].pos.z = (random() % 2000) - 1500;
-		ls[i].pos.x = random() / (double)RAND_MAX * 2000 - 1000;
-		ls[i].pos.y = random() / (double)RAND_MAX * 2000 - 500;
-		ls[i].pos.z = random() / (double)RAND_MAX * 2000 - 1000;
+		ls[i].pos.x = random() / (double)RAND_MAX * 200000 - 100000;
+		ls[i].pos.y = random() / (double)RAND_MAX * 200000 - 100000;
+		ls[i].pos.z = random() / (double)RAND_MAX * 200000 - 100000;
 	}
 
 	printf("Light Generated\n");
@@ -148,9 +145,9 @@ int main(int argc, char *argv[])
 		objs[i].m->diffuse.r = (float)rand() / RAND_MAX;
 		objs[i].m->diffuse.g = (float)rand() / RAND_MAX;
 		objs[i].m->diffuse.b = (float)rand() / RAND_MAX;
-		objs[i].m->specular.r = 1;
-		objs[i].m->specular.g = 1;
-		objs[i].m->specular.b = 1;
+		objs[i].m->specular.r = (float)rand() / RAND_MAX;
+		objs[i].m->specular.g = (float)rand() / RAND_MAX;
+		objs[i].m->specular.b = (float)rand() / RAND_MAX;
 		objs[i].m->roughness = (float)rand() / RAND_MAX;
 		objs[i].m->reflectivity = (float)rand() / RAND_MAX;
 		objs[i].r = (rand() % 130) + 20;
