@@ -95,3 +95,40 @@ void color::normalise255()
 void color::print() {
     printf("%f, %f, %f\n", r, g, b);
 }
+
+color color::randColor() {
+    int i = (float)rand() / RAND_MAX * 3;
+    if (i == 0) {
+        float g = (float)rand() / RAND_MAX;
+        while (g < 0.5) {
+            g = (float)rand() / RAND_MAX;
+        }
+        float b = (float)rand() / RAND_MAX;
+        while (b < 0.5) {
+            b = (float)rand() / RAND_MAX;
+        }
+        return color((float)rand() / RAND_MAX, g, b);
+    }
+    else if (i == 1) {
+        float r = (float)rand() / RAND_MAX;
+        while (r < 0.5) {
+            r = (float)rand() / RAND_MAX;
+        }
+        float b = (float)rand() / RAND_MAX;
+        while (b < 0.5) {
+            b = (float)rand() / RAND_MAX;
+        }
+        return color(r, (float)rand() / RAND_MAX, b);
+    }
+    else if (i == 2) {
+        float r = (float)rand() / RAND_MAX;
+        while (r < 0.5) {
+            r = (float)rand() / RAND_MAX;
+        }
+        float g = (float)rand() / RAND_MAX;
+        while (g < 0.5) {
+            g = (float)rand() / RAND_MAX;
+        }
+        return color(r, g, (float)rand() / RAND_MAX);
+    }
+}

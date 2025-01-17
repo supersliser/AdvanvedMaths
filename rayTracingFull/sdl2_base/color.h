@@ -17,4 +17,5 @@ public:
     void normalise255();
     bool notBlack();
     void print();
+    color static randColor();
 };

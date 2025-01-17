@@ -35,14 +35,14 @@ int main(int argc, char *argv[])
 
 	const int samples = 2;
 	const int reflectionBounces = 1;
-	const int objectCount = 50;
+	const int objectCount = 100;
 	const SampleType sampleType = RANDOM_SHRINKING_PIXELS;
 	const bool progressiveRender = 1;
-	const int passes = 5000;
-	const bool trueRandom = 1;
+	const int passes = 10000;
+	const bool trueRandom = 0;
 	const int pixelSize = 1;
 	const int lightCount = 5;
-	const int importanceStart = 500;
+	const int importanceStart = 200;
 	const int importanceVarianceSize = 10;
 	const int generationEnd = 40;
 
@@ -66,18 +66,15 @@ int main(int argc, char *argv[])
 	printf("Cam Generated\n");
 	light ls[lightCount];
 
-	if (!trueRandom)
-	{
 		ls[0].brightness = 99999999999;
 		ls[0].col.r = 1;
 		ls[0].col.g = 1;
 		ls[0].col.b = 1;
-		ls[0].pos.x = 500;
+		ls[0].pos.x = 0;
 		ls[0].pos.y = 0;
 		ls[0].pos.z = 0;
-	}
 
-	for (int i = trueRandom ? 0 : 1; i < lightCount; i++)
+	for (int i = 1; i < lightCount; i++)
 	{
 		ls[i].brightness = MAXFLOAT;
 		ls[i].col.r = 1;
@@ -131,7 +128,7 @@ int main(int argc, char *argv[])
 		objs[1].r = 50;
 		objs[1].id = 1;
 	}
-
+	color col = color(0, 0, 0);
 	for (int i = (trueRandom ? 2 : 0); i < objectCount; i++)
 	{
 		objs[i] = sphere();
@@ -142,12 +139,8 @@ int main(int argc, char *argv[])
 		objs[i].m->ambient.r = 0;
 		objs[i].m->ambient.g = 0;
 		objs[i].m->ambient.b = 0;
-		objs[i].m->diffuse.r = (float)rand() / RAND_MAX;
-		objs[i].m->diffuse.g = (float)rand() / RAND_MAX;
-		objs[i].m->diffuse.b = (float)rand() / RAND_MAX;
-		objs[i].m->specular.r = (float)rand() / RAND_MAX;
-		objs[i].m->specular.g = (float)rand() / RAND_MAX;
-		objs[i].m->specular.b = (float)rand() / RAND_MAX;
+		objs[i].m->diffuse = col.randColor();
+		objs[i].m->specular = col.randColor();
 		objs[i].m->roughness = (float)rand() / RAND_MAX;
 		objs[i].m->reflectivity = (float)rand() / RAND_MAX;
 		objs[i].r = (rand() % 130) + 20;
