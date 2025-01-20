@@ -1,6 +1,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <complex.h>
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 void saveImage(SDL_Renderer *ren, char *filename, int width, int height)
 {
@@ -30,15 +33,17 @@ color readPixel(SDL_Renderer *ren, int x, int y)
 	return c;
 }
 
-int *ft(SDL_Renderer *ren, int y, int width)
+float _Complex *ft(SDL_Renderer *ren, int y, int width)
 {
-	float _Complex data[width];
+	float data[width];
 	float _Complex result[width];
 
 	for (int x = 0; x < width; x++)
 	{
 		color c = readPixel(ren, x, y);
-		data[x] = c.r + 0.0 * I;
+		float temp = c.r;
+		temp /= 255.0;
+		data[x] = temp;
 	}
 
 	for (int x = 0; x < width; x++)
@@ -46,27 +51,30 @@ int *ft(SDL_Renderer *ren, int y, int width)
 		result[x] = 0.0 + 0.0 * I;
 		for (int xx = 0; xx < width; xx++)
 		{
-			float angle = 2.0 * M_PI * x * xx / (float)width;
-			result[x] += data[xx] * cexp(I * angle);
+			float angle = 2.0 * M_PI * xx / (float)width;
+			result[x] += data[xx] * cexp(I * angle * x);
 		}
+		result[x] /= width;
 	}
-	int *output = (int *)malloc(sizeof(int) * width);
-	for (int i = 0; i < width; i++)
+
+	float _Complex *result2 = (float _Complex *)malloc(sizeof(float _Complex) * width);
+
+	for (int x = 0; x < width; x++)
 	{
-		output[i] = cabs(result[i]);
+		result2[x] = result[x];
 	}
-	return output;
+
+	return result2;
 }
 
-int *Ift(SDL_Renderer *ren, int y, int width)
+float _Complex *Ift(float _Complex * input, int y, int width)
 {
 	float _Complex data[width];
 	float _Complex result[width];
 
 	for (int x = 0; x < width; x++)
 	{
-		color c = readPixel(ren, x, y);
-		data[x] = c.r + 0.0 * I;
+		data[x] = input[x];
 	}
 
 	for (int x = 0; x < width; x++)
@@ -74,30 +82,31 @@ int *Ift(SDL_Renderer *ren, int y, int width)
 		result[x] = 0.0 + 0.0 * I;
 		for (int xx = 0; xx < width; xx++)
 		{
-			float angle = 2.0 * M_PI * x * xx / (float)width;
-			result[x] += data[xx] * cexp(I * -angle);
+			float angle = 2.0 * M_PI * xx / (float)width;
+			result[x] += data[xx] * cexp(-I * angle * x);
 		}
-				result[x] /= width;
 	}
 
-	int *output = (int *)malloc(sizeof(int) * width);
-	for (int i = 0; i < width; i++)
+	float _Complex *result2 = (float _Complex *)malloc(sizeof(float _Complex) * width);
+
+	for (int x = 0; x < width; x++)
 	{
-		output[i] = cabs(result[i]);
+		result2[x] = result[x];
 	}
-	return output;
+
+	return result2;
 }
 
 int main(int argc, char *argv[])
 {
-	// returns zero on success else non-zero
 	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
 	{
 		printf("error initializing SDL: %s\n", SDL_GetError());
+		return 1;
 	}
 
-	const int SCREEN_WIDTH = 200;
-	const int SCREEN_HEIGHT = 200;
+	const int SCREEN_WIDTH = 500;
+	const int SCREEN_HEIGHT = 500;
 
 	SDL_Window *win = SDL_CreateWindow("GAME",
 									   SDL_WINDOWPOS_CENTERED,
@@ -108,73 +117,82 @@ int main(int argc, char *argv[])
 	SDL_RenderClear(ren);
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
-	// load an image
-	SDL_Surface *image = IMG_Load("start_image.bmp");
-
-	// create a texture
+	SDL_Surface *image = IMG_Load("start_image3.bmp");
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(ren, image);
-
 	SDL_RenderCopy(ren, texture, NULL, NULL);
+	SDL_RenderPresent(ren);
 
-	// convert to greyscale
-	for (int row = 0; row < SCREEN_HEIGHT; row++)
-	{
-		for (int col = 0; col < SCREEN_WIDTH; col++)
-		{
-			color c = readPixel(ren, col, row);
-			// Uint8 grey = (Uint8)((c.r + c.g + c.b) / 3);
-			SDL_SetRenderDrawColor(ren, c.r, c.r, c.r, 255);
-			SDL_RenderDrawPoint(ren, col, row);
-		}
-	}
-    SDL_RenderPresent(ren);
-	saveImage(ren, "./greyscale_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
+	Uint8 pixels[SCREEN_WIDTH * SCREEN_HEIGHT];
 
-	for (int v = 0; v < SCREEN_HEIGHT; v++)
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
 	{
-		printf("%d\n", v);
-		int *result = ft(ren, v, SCREEN_WIDTH);
-		for (int u = 0; u < SCREEN_WIDTH; u++)
-		{
-			if (result[u] > 255)
-			{
-				result[u] = 255;
-			}
-			if (result[u] < 0)
-			{
-				result[u] = 0;
-			}
-			SDL_SetRenderDrawColor(ren, result[u], result[u], result[u], 255);
-			SDL_RenderDrawPoint(ren, u, v);
-		}
-		free(result);
+	    for (int x = 0; x < SCREEN_WIDTH; x++)
+	    {
+	        color c = readPixel(ren, x, y);
+	        pixels[SCREEN_WIDTH * y + x] = (c.r + c.g + c.b) / 3;
+	    }
 	}
 
-	saveImage(ren, "./fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	for (int v = 0; v < SCREEN_HEIGHT; v++)
+	for (int x = 0; x < SCREEN_WIDTH; x++)
 	{
-		printf("%d\n", v);
-		int *result = Ift(ren, v, SCREEN_WIDTH);
-		for (int u = 0; u < SCREEN_WIDTH; u++)
+		for (int y = 0; y < SCREEN_HEIGHT; y++)
 		{
-			if (result[u] > 255)
-			{
-				result[u] = 255;
-			}
-			if (result[u] < 0)
-			{
-				result[u] = 0;
-			}
-			SDL_SetRenderDrawColor(ren, result[u], result[u], result[u], 255);
-			SDL_RenderDrawPoint(ren, u, v);
+			SDL_SetRenderDrawColor(ren, pixels[SCREEN_WIDTH * y + x], pixels[SCREEN_WIDTH * y + x], pixels[SCREEN_WIDTH * y + x], 255);
+			SDL_RenderDrawPoint(ren, x, y);
 		}
-		free(result);
 	}
-
-	saveImage(ren, "./inverse_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	SDL_RenderPresent(ren);
+	saveImage(ren, "./grayscale_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	float _Complex *result[SCREEN_HEIGHT];
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		result[y] = ft(ren, y, SCREEN_WIDTH);
+	}
+	for (int y = 0; y < SCREEN_HEIGHT; y++){
+		for (int x = 0; x < SCREEN_WIDTH; x++)
+		{
+			float temp = cabs(result[y][x]);
+			if (temp > 1)
+			{
+				temp = 1;
+			}
+			if (temp < 0)
+			{
+				temp = 0;
+			}
+			SDL_SetRenderDrawColor(ren, temp * 255, temp * 255, temp * 255, 255);
+			SDL_RenderDrawPoint(ren, x, y);
+		}
+	}
+	SDL_RenderPresent(ren);
+	saveImage(ren, "./fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	float _Complex *Ift_result[SCREEN_HEIGHT];
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		Ift_result[y] = Ift(result[y], y, SCREEN_WIDTH);
+	}
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		for (int x = 0; x < SCREEN_WIDTH; x++)
+		{
+			float temp = cabs(Ift_result[y][x]);
+			if (temp > 1)
+			{
+				temp = 1;
+			}
+			if (temp < 0)
+			{
+				temp = 0;
+			}
+			SDL_SetRenderDrawColor(ren, temp * 255, temp * 255, temp * 255, 255);
+			SDL_RenderDrawPoint(ren, x, y);
+		}
+	}
+	SDL_RenderPresent(ren);
+	saveImage(ren, "./inverse_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	while (1)
 	{
