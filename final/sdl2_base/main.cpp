@@ -11,6 +11,7 @@ void saveImage(SDL_Renderer *ren, char *filename, int width, int height)
 	SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
 	SDL_SaveBMP(sectionSurface, filename);
 	SDL_FreeSurface(sectionSurface);
+	printf("Image saved to %s\n", filename);
 }
 
 typedef struct color
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
 	SDL_RenderClear(ren);
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
-	SDL_Surface *image = IMG_Load("start_image3.bmp");
+	SDL_Surface *image = IMG_Load("start_image.bmp");
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(ren, image);
 	SDL_RenderCopy(ren, texture, NULL, NULL);
 	SDL_RenderPresent(ren);
