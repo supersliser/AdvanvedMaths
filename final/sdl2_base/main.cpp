@@ -12,6 +12,7 @@ void saveImage(SDL_Renderer *ren, char *filename, int width, int height)
 	SDL_SaveBMP(sectionSurface, filename);
 	SDL_FreeSurface(sectionSurface);
 	printf("Image saved to %s\n", filename);
+	fflush(stdout);
 }
 
 typedef struct color
@@ -103,8 +104,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	const int SCREEN_WIDTH = 1000;
-	const int SCREEN_HEIGHT = 1000;
+	const int SCREEN_WIDTH = 200;
+	const int SCREEN_HEIGHT = 200;
 
 	SDL_Window *win = SDL_CreateWindow("GAME",
 									   SDL_WINDOWPOS_CENTERED,
@@ -115,7 +116,7 @@ int main(int argc, char *argv[])
 	SDL_RenderClear(ren);
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
-	SDL_Surface *image = IMG_Load("start_image.bmp");
+	SDL_Surface *image = IMG_Load("start_image3.bmp");
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(ren, image);
 	SDL_RenderCopy(ren, texture, NULL, NULL);
 	SDL_RenderPresent(ren);
