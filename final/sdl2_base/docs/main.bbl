@@ -16,5 +16,66 @@
   {}
 \endgroup
 
+
+\refsection{0}
+  \datalist[entry]{nyt/apasortcite//global/global/global}
+    \entry{ian1}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=3097fa1fefe1c5c2e00ea62c4f20da26}{%
+           family={Stephenson},
+           familyi={S\bibinitperiod},
+           given={Ian},
+           giveni={I\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{fullhash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{fullhashraw}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{bibnamehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authorbibnamehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authornamehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authorfullhash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authorfullhashraw}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Advanced Mathematics for Computer Graphics, Lecture 10}
+      \field{year}{2024}
+    \endentry
+  \enddatalist
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{ian1}{misc}{}{}
+      \name{author}{1}{}{%
+        {{un=0,uniquepart=base,hash=3097fa1fefe1c5c2e00ea62c4f20da26}{%
+           family={Stephenson},
+           familyi={S\bibinitperiod},
+           given={Ian},
+           giveni={I\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{fullhash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{fullhashraw}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{bibnamehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authorbibnamehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authornamehash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authorfullhash}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \strng{authorfullhashraw}{3097fa1fefe1c5c2e00ea62c4f20da26}
+      \field{sortinit}{S}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \true{uniqueprimaryauthor}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Advanced Mathematics for Computer Graphics, Lecture 10}
+      \field{year}{2024}
+    \endentry
+  \enddatalist
+\endrefsection
 \endinput
 
