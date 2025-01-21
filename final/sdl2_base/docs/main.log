@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.21)  21 JAN 2025 03:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.1.21)  21 JAN 2025 11:54
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**/home/tom/blankLatex/main.tex
-(/home/tom/blankLatex/main.tex
+**/home/tom/AdvancedMaths/final/sdl2_base/docs/main.tex
+(/home/tom/AdvancedMaths/final/sdl2_base/docs/main.tex
 LaTeX2e <2024-11-01> patch level 1
 L3 programming layer <2024-12-25>
 (/usr/local/texlive/2024/texmf-dist/tex/latex/base/article.cls
@@ -437,21 +437,13 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <6> on input line 18.
 
 
-LaTeX Warning: No \author given.
-
-
-
 [1
 
-{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./main.toc)
-\tf@toc=\write4
-\openout4 = `main.toc'.
-
-
+{/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 
 [2]
 
-LaTeX Warning: Empty bibliography on input line 26.
+LaTeX Warning: Empty bibliography on input line 28.
 
 (./main.aux)
  ***********
@@ -463,15 +455,15 @@ Package logreq Info: Writing requests to 'main.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 11625 strings out of 473207
- 223895 string characters out of 5716288
- 1138274 words of memory out of 5000000
- 34786 multiletter control sequences out of 15000+600000
+ 11618 strings out of 473207
+ 223890 string characters out of 5716288
+ 1138284 words of memory out of 5000000
+ 34782 multiletter control sequences out of 15000+600000
  562477 words of font info for 48 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 67i,6n,81p,714b,5050s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 67i,6n,81p,738b,5050s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on main.pdf (2 pages, 38368 bytes).
+Output written on main.pdf (2 pages, 41236 bytes).
 PDF statistics:
  31 PDF objects out of 1000 (max. 8388607)
  18 compressed objects within 1 object stream
