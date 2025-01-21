@@ -104,8 +104,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	const int SCREEN_WIDTH = 200;
-	const int SCREEN_HEIGHT = 200;
+	const int SCREEN_WIDTH = 2000;
+	const int SCREEN_HEIGHT = 2000;
 
 	SDL_Window *win = SDL_CreateWindow("GAME",
 									   SDL_WINDOWPOS_CENTERED,
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 	SDL_RenderClear(ren);
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
-	SDL_Surface *image = IMG_Load("start_image3.bmp");
+	SDL_Surface *image = IMG_Load("start_image.bmp");
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(ren, image);
 	SDL_RenderCopy(ren, texture, NULL, NULL);
 	SDL_RenderPresent(ren);
@@ -168,52 +168,58 @@ int main(int argc, char *argv[])
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 
-	// for (int y = 0; y < SCREEN_HEIGHT; y++)
-	// {
-	// 	for (int x = 0; x < SCREEN_WIDTH; x++)
-	// 	{
-	// 		result[y][x] = result[x][y];
-	// 	}
-	// }
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		for (int x = 0; x < SCREEN_WIDTH; x++)
+		{
+			result[y][x] = result[x][y];
+		}
+	}
 
-	// float _Complex *result2[SCREEN_HEIGHT];
-	// for (int y = 0; y < SCREEN_HEIGHT; y++)
-	// {
-	// 	result2[y] = ft(result[y], y, SCREEN_HEIGHT);
-	// }
-	// for (int y = 0; y < SCREEN_HEIGHT; y++)
-	// {
-	// 	for (int x = 0; x < SCREEN_WIDTH; x++)
-	// 	{
-	// 		float temp = cabs(result2[y][x]);
-	// 		if (temp > 1)
-	// 		{
-	// 			temp = 1;
-	// 		}
-	// 		if (temp < 0)
-	// 		{
-	// 			temp = 0;
-	// 		}
-	// 		SDL_SetRenderDrawColor(ren, temp * 255, temp * 255, temp * 255, 255);
-	// 		SDL_RenderDrawPoint(ren, x, y);
-	// 	}
-	// }
+	float _Complex *result2[SCREEN_HEIGHT];
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		result2[y] = Ift(result[y], y, SCREEN_HEIGHT);
+	}
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		for (int x = 0; x < SCREEN_WIDTH; x++)
+		{
+			float temp = cabs(result2[y][x]);
+			if (temp > 1)
+			{
+				temp = 1;
+			}
+			if (temp < 0)
+			{
+				temp = 0;
+			}
+			SDL_SetRenderDrawColor(ren, temp * 255, temp * 255, temp * 255, 255);
+			SDL_RenderDrawPoint(ren, x, y);
+		}
+	}
 
-	// SDL_RenderPresent(ren);
+	SDL_RenderPresent(ren);
 
-	// saveImage(ren, "./double_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
+	saveImage(ren, "./double_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 
 	SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
 
-	// SDL_Rect rect = {SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
+	SDL_Rect rect = {SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
 
-	SDL_Rect rect = {0, 0, SCREEN_WIDTH / 50, SCREEN_HEIGHT};
+	// const int borderSize = 50;
+
+	// SDL_Rect rect = {0, 0, borderSize, SCREEN_HEIGHT};
 	SDL_RenderFillRect(ren, &rect);
-	SDL_Rect rect2 = {SCREEN_WIDTH - SCREEN_WIDTH / 50, 0, SCREEN_WIDTH / 50, SCREEN_HEIGHT};
-	SDL_RenderFillRect(ren, &rect2);
+	// SDL_Rect rect2 = {SCREEN_WIDTH - borderSize, 0, borderSize, SCREEN_HEIGHT};
+	// SDL_RenderFillRect(ren, &rect2);
+	// SDL_Rect rect3 = {0, 0, SCREEN_WIDTH, borderSize};
+	// SDL_RenderFillRect(ren, &rect3);
+	// SDL_Rect rect4 = {0, SCREEN_HEIGHT -borderSize, SCREEN_WIDTH, borderSize};
+	// SDL_RenderFillRect(ren, &rect4);
 
 	SDL_RenderPresent(ren);
 
@@ -256,7 +262,7 @@ int main(int argc, char *argv[])
 	for (int y = 0; y < SCREEN_HEIGHT; y++) {
 		convolution_result[y] = (float _Complex*)malloc(sizeof(float _Complex) * SCREEN_WIDTH);
 		for (int x = 0; x < SCREEN_WIDTH; x++) {
-			convolution_result[y][x] = box_result[y][x] * result[y][x];
+			convolution_result[y][x] = box_result[y][x] * result2[y][x];
 		}
 	}
 
@@ -264,48 +270,48 @@ int main(int argc, char *argv[])
 
 	saveImage(ren, "./convolution_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
 
-	// float _Complex *Ift_result[SCREEN_HEIGHT];
-	// for (int y = 0; y < SCREEN_HEIGHT; y++)
-	// {
-	// 	Ift_result[y] = Ift(convolution_result[y], y, SCREEN_WIDTH);
-	// }
-	// for (int y = 0; y < SCREEN_HEIGHT; y++)
-	// {
-	// 	for (int x = 0; x < SCREEN_WIDTH; x++)
-	// 	{
-	// 		float temp = cabs(Ift_result[y][x]);
-	// 		if (temp > 1)
-	// 		{
-	// 			temp = 1;
-	// 		}
-	// 		if (temp < 0)
-	// 		{
-	// 			temp = 0;
-	// 		}
-	// 		SDL_SetRenderDrawColor(ren, temp * 255, temp * 255, temp * 255, 255);
-	// 		SDL_RenderDrawPoint(ren, x, y);
-	// 	}
-	// }
-	// SDL_RenderPresent(ren);
-	// saveImage(ren, "./inverse_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
+	float _Complex *Ift_result[SCREEN_HEIGHT];
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		Ift_result[y] = Ift(convolution_result[y], y, SCREEN_WIDTH);
+	}
+	for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		for (int x = 0; x < SCREEN_WIDTH; x++)
+		{
+			float temp = cabs(Ift_result[y][x]);
+			if (temp > 1)
+			{
+				temp = 1;
+			}
+			if (temp < 0)
+			{
+				temp = 0;
+			}
+			SDL_SetRenderDrawColor(ren, temp * 255, temp * 255, temp * 255, 255);
+			SDL_RenderDrawPoint(ren, x, y);
+		}
+	}
+	SDL_RenderPresent(ren);
+	saveImage(ren, "./inverse_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
 
 
 	float _Complex *Ift_result2[SCREEN_HEIGHT];
 
-	// 	for (int y = 0; y < SCREEN_HEIGHT; y++)
-	// {
-	// 	for (int x = 0; x < SCREEN_WIDTH; x++)
-	// 	{
-	// 		Ift_result[y][x] = Ift_result[x][y];
-	// 	}
-	// }
+		for (int y = 0; y < SCREEN_HEIGHT; y++)
+	{
+		for (int x = 0; x < SCREEN_WIDTH; x++)
+		{
+			Ift_result[y][x] = Ift_result[y][x];
+		}
+	}
 
 	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 	SDL_RenderClear(ren);
 
 	for (int y = 0; y < SCREEN_HEIGHT; y++)
 	{
-		Ift_result2[y] = Ift(convolution_result[y], y, SCREEN_WIDTH);
+		Ift_result2[y] = Ift(Ift_result[y], y, SCREEN_WIDTH);
 	}
 	for (int y = 0; y < SCREEN_HEIGHT; y++)
 	{
@@ -326,9 +332,6 @@ int main(int argc, char *argv[])
 	}
 	SDL_RenderPresent(ren);
 	saveImage(ren, "./double_inverse_fourier_image.bmp", SCREEN_WIDTH, SCREEN_HEIGHT);
-
-	SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
-	SDL_RenderClear(ren);
 
 	while (1)
 	{
