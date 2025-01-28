@@ -1,4 +1,6 @@
 #include "cam.h"
+#include <thread>
+#include <vector>
 
 cam::cam()
 {
@@ -18,6 +20,42 @@ cam::cam(point pos, vec dir, float fov, bool orthographic)
     this->dir = dir;
     this->fov = fov;
     this->orthographic = orthographic;
+}
+
+void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, int passCount, int importanceStart, int generationEnd, int importanceVarianceSize, bool progressive, int sampleAmount, int level)
+{
+    int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
+    int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
+    // printf("Starting sample at (%d, %d)\n", x, y);
+    cam tempCamera = *this;
+    if (this->orthographic)
+    {
+        tempCamera.pos.x += x;
+        tempCamera.pos.y += y;
+    }
+    else
+    {
+        tempCamera.pos.x += x;
+        tempCamera.pos.y += y;
+        tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
+        tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
+        tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
+        tempCamera.dir.Normalise();
+    }
+    // printf("Sampling (%d, %d)\n", x, y);
+    // printf("%d\n", maxWidth * maxHeight);
+    // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
+    // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
+    color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+    // printf("Sampled successfully, applying sample to array\n");
+    for (int u = 0; u < level * pixelSize; u++)
+    {
+        for (int v = 0; v < level * pixelSize; v++)
+        {
+            SDL_SetRenderDrawColor(ren, temp.r * 255, temp.g * 255, temp.b * 255, 255);
+            SDL_RenderDrawPoint(ren, SDL_clamp(x + u + (maxWidth / 2), 0, maxWidth), SDL_clamp(y + v + (maxHeight / 2), 0, maxHeight));
+        }
+    }
 }
 
 void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd, int importanceVarianceSize)
@@ -110,41 +148,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
     {
         for (int level = importanceStart; level > 0; level--)
         {
+            std::vector<std::thread> threads;
+
             printf("Starting level %d importance sample\n", level);
             for (int pass = 0; pass < passCount / level; pass++)
             {
-                int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
-                int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
-                // printf("Starting sample at (%d, %d)\n", x, y);
-                cam tempCamera = *this;
-                if (this->orthographic)
-                {
-                    tempCamera.pos.x += x;
-                    tempCamera.pos.y += y;
-                }
-                else
-                {
-                    tempCamera.pos.x += x;
-                    tempCamera.pos.y += y;
-                    tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                    tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                    tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                    tempCamera.dir.Normalise();
-                }
-                // printf("Sampling (%d, %d)\n", x, y);
-                // printf("%d\n", maxWidth * maxHeight);
-                // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
-                // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
-                color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
-                // printf("Sampled successfully, applying sample to array\n");
-                for (int u = 0; u < level * pixelSize; u++)
-                {
-                    for (int v = 0; v < level * pixelSize; v++)
-                    {
-                        SDL_SetRenderDrawColor(ren, temp.r * 255, temp.g * 255, temp.b * 255, 255);
-                        SDL_RenderDrawPoint(ren, SDL_clamp(x + u + (maxWidth / 2), 0, maxWidth), SDL_clamp(y + v + (maxHeight / 2), 0, maxHeight));
-                    }
-                }
+                threads.push_back(std::thread([=]()
+                                              { RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level); }));
+                threads.back().join();
+
+                // RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level);
             }
             if (progressive)
             {

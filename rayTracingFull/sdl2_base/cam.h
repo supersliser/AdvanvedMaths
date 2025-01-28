@@ -38,6 +38,8 @@ class cam {
         void PathTracePixel(SDL_Renderer *ren, cam c, light* l, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize);
         color PathTrace(SDL_Renderer *ren, cam c, light* l, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int recursionCount);
 
+        void RandomShrinkingPixels(SDL_Renderer *ren, cam c, light* ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, int passCount, int importanceStart, int generationEnd, int importanceVarianceSize, bool progressive, int sampleAmount, int level);
+
         static hit TraceObjs(cam c, sphere *objs, int objCount);
 
         bool isImportant(color**pixels, int x, int y, int maxWidth, int maxHeight, int importanceVarianceSize, int level);
