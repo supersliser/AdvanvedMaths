@@ -42,8 +42,6 @@ class cam {
 
         void RandomShrinkingPixels(SDL_Renderer *ren, cam c, light* ls, int lCount, geo *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, int passCount, int importanceStart, int generationEnd, int importanceVarianceSize, bool progressive, int sampleAmount, int level);
 
-        static hit TraceObjs(cam c, geo *objs, int objCount);
-
         bool isImportant(color**pixels, int x, int y, int maxWidth, int maxHeight, int importanceVarianceSize, int level);
 
         void printCam();

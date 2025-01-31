@@ -1,5 +1,9 @@
 #pragma once
 
+#include "point.h"
+
+class point;
+
 class vec {
     public:
         float x;
@@ -20,8 +24,11 @@ class vec {
         float dp(vec i);
         vec Normalise();
         vec cp(vec i);
+        float mag();
 
         float length();
+
+        point toPoint();
 
         vec randomRay();
 };

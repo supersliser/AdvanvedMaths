@@ -35,4 +35,6 @@ class vertex : public point {
         bool operator!=(vertex v);
 
         void printVertex();
+
+        point getPos();
 };

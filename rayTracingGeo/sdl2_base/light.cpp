@@ -7,7 +7,8 @@ light::light(point pos, color col, float brightness)
     this->brightness = brightness;
 }
 
-light::light() {
+light::light()
+{
     this->pos.x = 0;
     this->pos.y = 0;
     this->pos.z = 0;
@@ -17,15 +18,29 @@ light::light() {
     this->brightness = 0;
 }
 
-bool light::calculateShadows(hit h, geo *sphereObjs, int sphereCount) {
+bool light::calculateShadows(hit th, geo *objs, int objCount)
+{
     vec lDir;
-    lDir = this->pos.sub(h.P);
+    lDir = this->pos.sub(th.P);
     lDir = lDir.Normalise();
-    for (int i = 0; i < sphereCount; i++) {
-        hit temp = sphereObjs[i].testRay(h.P, lDir);
-        if (temp.hitSuccess && temp.dist < h.dist && temp.obj != h.obj) {
-            return 1;
+    hit h = hit();
+    h.dist = MAXFLOAT;
+    for (int i = 0; i < objCount; i++)
+    {
+        int faceCount;
+        face **faces = objs[i].getFaces(&faceCount);
+        for (int j = 0; j < faceCount; j++)
+        {
+            hit temp = objs[i].testRay(h.P, lDir, faces[j]);
+            if (temp.hitSuccess && temp.dist < h.dist)
+            {
+                h = temp;
+            }
         }
+    }
+    if (h.hitSuccess)
+    {
+        return true;
     }
     return 0;
 }

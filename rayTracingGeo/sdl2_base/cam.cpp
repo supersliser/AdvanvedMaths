@@ -73,15 +73,18 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                 }
                 else
                 {
-                    tempCamera.pos.x += x;
-                    tempCamera.pos.y += y;
-                    tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                    tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                    tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                    tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                 }
-                printf("Beginning sample at (%d, %d)\n", x, y);
-                    tempCamera.LinearSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1);
+                tempCamera.LinearSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1);
                 fflush(stdout);
             }
             if (progressive)
@@ -521,7 +524,21 @@ color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
             cam tempCam = c;
             tempCam.pos.x += u;
             tempCam.pos.y += v;
-            hit h = TraceObjs(tempCam, objs, objCount);
+            hit h = hit();
+            h.dist = MAXFLOAT;
+            for (int i = 0; i < objCount; i++)
+            {
+                int faceCount;
+                face **faces = objs[i].getFaces(&faceCount);
+                for (int j = 0; j < faceCount; j++)
+                {
+                    hit temp = objs[i].testRay(tempCam.pos, tempCam.dir, faces[j]);
+                    if (temp.hitSuccess && temp.dist < h.dist)
+                    {
+                        h = temp;
+                    }
+                }
+            }
             if (h.hitSuccess)
             {
                 color temp = h.obj->getMat()->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
@@ -531,6 +548,9 @@ color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
             }
             else
             {
+                pixel.r += 0;
+                pixel.g += 0;
+                pixel.b += 0;
             }
         }
     }
@@ -571,8 +591,21 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
         cam tempCam = c;
         tempCam.pos.x += (float)rand() / (float)RAND_MAX;
         tempCam.pos.y += (float)rand() / (float)RAND_MAX;
-        hit h = TraceObjs(tempCam, objs, objCount);
-        // printf("Traced objects\n");
+            hit h = hit();
+            h.dist = MAXFLOAT;
+            for (int i = 0; i < objCount; i++)
+            {
+                int faceCount;
+                face **faces = objs[i].getFaces(&faceCount);
+                for (int j = 0; j < faceCount; j++)
+                {
+                    hit temp = objs[i].testRay(tempCam.pos, tempCam.dir, faces[j]);
+                    if (temp.hitSuccess && temp.dist < h.dist)
+                    {
+                        h = temp;
+                    }
+                }
+            }        // printf("Traced objects\n");
         if (h.hitSuccess)
         {
             output[i] = h.obj->getMat()->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
@@ -614,69 +647,4 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
     }
     // printf("Returning pixel\n");
     return pixel;
-}
-
-void cam::PathTracePixel(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize)
-{
-    // printf("Starting Path Trace\n");
-    // fflush(stdout);
-    for (int i = 0; i < 1000; i++)
-    {
-        cam tempcam = c;
-        tempcam.pos.x += (float)rand() / (float)RAND_MAX;
-        tempcam.pos.y += (float)rand() / (float)RAND_MAX;
-        tempcam.dir = tempcam.dir.randomRay();
-        tempcam.dir.Normalise();
-        color output = PathTrace(ren, tempcam, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, 0);
-        // printf("Drawing Colour (%f, %f, %f) at (%f, %f)\n", output.r, output.g, output.b, x, y);
-        // fflush(stdout);
-        SDL_SetRenderDrawColor(ren, output.r * 255, output.g * 255, output.b * 255, 255);
-        for (int i = 0; i < pixelSize; i++)
-        {
-            for (int j = 0; j < pixelSize; j++)
-            {
-                SDL_RenderDrawPoint(ren, x + i + (maxWidth / 2), y + j + (maxHeight / 2));
-            }
-        }
-    }
-}
-
-color cam::PathTrace(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int recursionCount)
-{
-    // printf("Tracing Path\n");
-    // fflush(stdout);
-    hit h = TraceObjs(c, objs, objCount);
-    c.dir = c.dir.randomRay();
-    if (!h.hitSuccess)
-    {
-        return color(0, 0, 0);
-    }
-    color output = h.obj->getMat()->shade(c, ls, lCount, h, objs, objCount, 0, -1);
-    // printf("Tracing Shaded\n");
-    // fflush(stdout);
-    if (recursionCount < recursionMax)
-    {
-        output.toCol(output.toVec().mult(PathTrace(ren, c, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, recursionCount + 1).toVec()));
-    }
-    // printf("Path Traced\n");
-    // fflush(stdout);
-    return output;
-}
-
-hit cam::TraceObjs(cam c, geo *objs, int objCount)
-{
-    printf("Tracing Objects\n");
-    hit bestHit;
-    bestHit.dist = 100000000000000;
-    for (int i = 0; i < objCount; i++)
-    {
-        hit h = objs[i].testRay(c.pos, c.dir);
-        if (h.hitSuccess && h.dist < bestHit.dist)
-        {
-            printf("Hit Object\n");
-            bestHit = h;
-        }
-    }
-    printf("Traced Objects\n");
-    return bestHit;
 }

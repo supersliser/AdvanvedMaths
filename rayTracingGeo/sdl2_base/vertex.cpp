@@ -24,7 +24,11 @@ vertex::vertex(float x, float y, float z)
 
 void vertex::addConnection(vertex *v)
 {
-    vertex *temp[this->connectionCount + 1];
+    if (v == NULL || v == this || v == nullptr)
+    {
+        return;
+    }
+    vertex **temp = (vertex **)calloc(this->connectionCount + 1, sizeof(vertex*));
     for (int i = 0; i < this->connectionCount; i++)
     {
         if (this->connections[i] == v)
@@ -33,7 +37,7 @@ void vertex::addConnection(vertex *v)
         }
         temp[i] = this->connections[i];
     }
-    temp[this->connectionCount + 1] = v;
+    temp[this->connectionCount] = v;
     this->connections = temp;
     this->connectionCount++;
 }
@@ -87,7 +91,7 @@ int vertex::getFaceCount()
 
 void vertex::addFace(face *f)
 {
-    face *temp[this->faceCount + 1];
+    face **temp = (face **)calloc(this->faceCount + 1, sizeof(face*));
     for (int i = 0; i < this->faceCount; i++)
     {
         if (this->faces[i] == f)
@@ -96,7 +100,7 @@ void vertex::addFace(face *f)
         }
         temp[i] = this->faces[i];
     }
-    temp[this->faceCount + 1] = f;
+    temp[this->faceCount] = f;
     this->faces = temp;
     this->faceCount++;
 }
@@ -151,16 +155,21 @@ bool vertex::operator!=(vertex v)
 void vertex::printVertex()
 {
     printf("Vertex pointer: %p\n", this);
-    printf("Connections: %d\n", this->connectionCount);
+    printf("Vertex Connections: %d\n", this->connectionCount);
     for (int i = 0; i < this->connectionCount; i++)
     {
         printf("Connection %d: %p\n", i, this->connections[i]);
     }
-    printf("Faces: %d\n", this->faceCount);
+    printf("Vertex Faces: %d\n", this->faceCount);
     for (int i = 0; i < this->faceCount; i++)
     {
         printf("Face %d: %p\n", i, this->faces[i]);
     }
-    printf("Vertex: (%f, %f, %f)\n", this->x, this->y, this->z);
+    printf("Vertex Data: (%f, %f, %f)\n", this->x, this->y, this->z);
     fflush(stdout);
+}
+
+point vertex::getPos()
+{
+    return point(this->x, this->y, this->z);
 }

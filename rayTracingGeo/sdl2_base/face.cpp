@@ -3,45 +3,43 @@
 face::face()
 {
     this->vertices = new vertex *[0];
-    this->normal = vec();
     this->vertexCount = 0;
 }
 
 face::face(vertex *v1, vertex *v2, vertex *v3)
 {
-    this->vertices = new vertex *[3];
+    this->vertices = (vertex **)calloc(3, sizeof(vertex*));
     this->vertices[0] = v1;
     this->vertices[1] = v2;
     this->vertices[2] = v3;
-    vec v1v2 = vec(v1->x - v2->x, v1->y - v2->y, v1->z - v2->z);
-    vec v1v3 = vec(v1->x - v3->x, v1->y - v3->y, v1->z - v3->z);
-    this->normal = v1v2.cp(v1v3);
-    this->normal.Normalise();
 
     v1->addFace(this);
     v2->addFace(this);
     v3->addFace(this);
 
     this->vertexCount = 3;
+    printf("Face Created\n");
 }
 
-face::face(vertex**vs, int vertexCount) {
-    this->vertices = vs;
-    vec v1v2 = vec(vs[0]->x - vs[1]->x, vs[0]->y - vs[1]->y, vs[0]->z - vs[1]->z);
-    vec v1v3 = vec(vs[0]->x - vs[2]->x, vs[0]->y - vs[2]->y, vs[0]->z - vs[2]->z);
-    this->normal = v1v2.cp(v1v3);
-        this->normal = v1v2.cp(v1v3);
-    this->normal.Normalise();
+// face::face(vertex** vs, int vertexCount) {
+//     this->vertices = vs;
+//     this->vertexCount = vertexCount;
+// }
 
-    for (int i = 0; i < vertexCount; i++) {
-        vs[i]->addFace(this);
-    }
-    this->vertexCount = vertexCount;
+vec face::calculateNormal() {
+    vec v1 = this->vertices[1]->getPos().sub(this->vertices[0]->getPos());
+    vec v2 = this->vertices[2]->getPos().sub(this->vertices[0]->getPos());
+    return v1.cp(v2).Normalise();
+}
+
+int face::getVertexCount()
+{
+    return this->vertexCount;
 }
 
 void face::addVertex(vertex *v)
 {
-    vertex *temp[vertexCount + 1];
+    vertex **temp = (vertex **)calloc(this->vertexCount + 1, sizeof(vertex*));
     for (int i = 0; i < vertexCount; i++)
     {
         if (this->vertices[i] == v)
@@ -51,7 +49,7 @@ void face::addVertex(vertex *v)
         temp[i] = this->vertices[i];
     }
     v->addFace(this);
-    temp[vertexCount + 1] = v;
+    temp[vertexCount] = v;
     this->vertices = temp;
     this->vertexCount++;
 }
@@ -76,7 +74,27 @@ vertex **face::getVertices()
     return this->vertices;
 }
 
+void face::printFace()
+{
+    printf("Face Pointer: %p\n", this);
+    printf("Vertex Count: %d\n", this->vertexCount);
+    printf("Vertices: \n");
+    for (int i = 0; i < vertexCount; i++)
+    {
+        printf("Vertex %d: %p\n", i, this->vertices[i]);
+    }
+    vec n = this->calculateNormal();
+    printf("Normal: (%f, %f, %f)\n", n.x, n.y, n.z);
+    printf("\n");
+}
+
 vec face::getNormal()
 {
     return this->normal;
 }
+
+void face::setNormal(vec n)
+{
+    this->normal = n;
+}
+

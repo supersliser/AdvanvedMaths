@@ -11,6 +11,7 @@ class point;
 class color;
 class vec;
 class geo;
+class face;
 
 class light {
 public:

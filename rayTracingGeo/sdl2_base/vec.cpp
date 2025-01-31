@@ -60,6 +60,7 @@ vec vec::mult(vec i)
 vec vec::Normalise()
 {
     float mag = sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+    if (mag == 0) return vec(0, 0, 0); // Prevent division by zero
     vec o;
     o.x = this->x / mag;
     o.y = this->y / mag;
@@ -111,4 +112,14 @@ vec vec::randomRay()
     // printf("Ray Generated\n");
     // fflush(stdout);
     return o;
+}
+
+float vec::mag()
+{
+    return sqrt(this->x * this->x + this->y * this->y + this->z * this->z);
+}
+
+point vec::toPoint()
+{
+    return point(this->x, this->y, this->z);
 }

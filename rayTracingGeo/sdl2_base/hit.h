@@ -5,6 +5,7 @@
 
 class point;
 class geo;
+class face;
 
 class hit {
     public:
@@ -12,7 +13,8 @@ class hit {
         geo *obj;
         float dist;
         point P;
+        face *f;
 
         hit();
-        hit(bool hit, geo *obj, float dist, point P);
+        hit(bool hit, geo *obj, float dist, point P, face *f);
 };
