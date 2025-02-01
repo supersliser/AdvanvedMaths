@@ -19,6 +19,8 @@ private:
 public:
     face();
     face(vertex *v1, vertex *v2, vertex *v3);
+        ~face(); // Add destructor
+
     // face(vertex **vs, int vertexCount);
     void addVertex(vertex *v);
     void removeVertex(vertex *v);
@@ -46,8 +48,16 @@ public:
     geo();
     geo(point c);
     geo(point c, mat *m);
+    ~geo(); // Add destructor
     void cube(float size);
     void plane(float size);
+    void sphere(float size, int stacks, int slices);
+    void pill(float size);
+    void cylinder(float size);
+    void cone(float size);
+    void torus(float size);
+    void knot(float size);
+    void teddyBear(float size);
     void addVertex(vertex *v);
     void removeVertex(vertex *v);
     void translate(vec v);

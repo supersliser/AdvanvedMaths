@@ -1,5 +1,6 @@
 #include "mat.h"
 #include <math.h>
+#include <cstdlib> // for free
 
 mat::mat()
 {
@@ -23,6 +24,11 @@ mat::mat(color diffuse, color specular, color ambient, float reflectivity, float
     this->ambient = ambient;
     this->reflectivity = reflectivity;
     this->roughness = roughness;
+}
+
+mat::~mat()
+{
+    // No dynamic memory to free in mat class
 }
 
 color mat::shade(cam c, light *ls, int lCount, hit h, geo *objs, int objCount, int recursionCount, int recursionMax)
@@ -139,9 +145,9 @@ color mat::shade(cam c, light *ls, int lCount, hit h, geo *objs, int objCount, i
     // output.g = ((finalDiffuse.g + finalSpecular.g + finalAmbient.g + reflection.g / 4) * shadow);
     // output.b = ((finalDiffuse.b + finalSpecular.b + finalAmbient.b + reflection.b / 4) * shadow);
 
-    output.r = normal.x != 0 ? 1 : 0;
-    output.g = normal.y != 0 ? 1 : 0;
-    output.b = normal.z != 0 ? 1 : 0;
+    output.r = normal.x < 0 ? -normal.x : normal.x;
+    output.g = normal.y < 0 ? -normal.y : normal.y;
+    output.b = normal.z < 0 ? -normal.z : normal.z;
 
     // h.f->printFace();
 

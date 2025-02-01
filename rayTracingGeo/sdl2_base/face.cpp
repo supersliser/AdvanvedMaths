@@ -1,4 +1,5 @@
 #include "geo.h"
+#include <cstdlib> // for free
 
 face::face()
 {
@@ -50,6 +51,7 @@ void face::addVertex(vertex *v)
     }
     v->addFace(this);
     temp[vertexCount] = v;
+    free(this->vertices);
     this->vertices = temp;
     this->vertexCount++;
 }
@@ -96,5 +98,13 @@ vec face::getNormal()
 void face::setNormal(vec n)
 {
     this->normal = n;
+}
+
+face::~face()
+{
+    if (this->vertices != nullptr)
+    {
+        free(this->vertices);
+    }
 }
 

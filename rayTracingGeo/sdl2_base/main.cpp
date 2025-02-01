@@ -37,9 +37,9 @@ int main(int argc, char *argv[])
 	const int reflectionBounces = 0;
 	const int objectCount = 1;
 	const SampleType sampleType = LINEAR;
-	const bool progressiveRender = 0;
+	const bool progressiveRender = 1;
 	const int passes = 10000;
-	const bool trueRandom = 0;
+	const bool trueRandom = 1;
 	const int pixelSize = 1;
 	const int lightCount = 3;
 	const int importanceStart = 200;
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 		srandom(time(NULL));
 	}
 
-	cam *c = new cam(point(3, -2, 5), vec(0, 0, -1), 90, 0);
+	cam *c = new cam(point(1, -1, 2), vec(0, 0, -1), 75, 0);
 
 	printf("Cam Generated\n");
 	c->printCam(); // Add this line to print camera details
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 
 	geo objs[objectCount];
 	objs[0] = geo(point(0, 0, 0), new mat(color(1, 1, 1), color(1, 0, 0), color(1, 1, 1), 0.2, 1));
-	objs[0].cube(1);
+	objs[0].sphere(1, 20, 20);
 	// objs[1] = geo(point(3, -1, 0), new mat(color(1, 1, 1), color(1, 0, 0), color(1, 1, 1), 0.2, 1));
 	// objs[1].cube(1);
 
@@ -117,6 +117,13 @@ int main(int argc, char *argv[])
 	// SDL_Surface *sectionSurface = SDL_CreateRGBSurface(0, 1000, 1000, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
 	// SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
 	// IMG_SaveJPG(sectionSurface, "./box.jpg", 100);
+
+	// Clean up
+	SDL_DestroyRenderer(ren);
+	SDL_DestroyWindow(win);
+	SDL_Quit();
+
+	delete c;
 
 	return 0;
 }

@@ -1,4 +1,5 @@
 #include "light.h"
+#include <cstdlib> // for free
 
 light::light(point pos, color col, float brightness)
 {
@@ -16,6 +17,11 @@ light::light()
     this->col.g = 0;
     this->col.b = 0;
     this->brightness = 0;
+}
+
+light::~light()
+{
+    // No dynamic memory to free in light class
 }
 
 bool light::calculateShadows(hit th, geo *objs, int objCount)

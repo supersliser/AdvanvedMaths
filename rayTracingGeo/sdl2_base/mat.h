@@ -24,6 +24,7 @@ public:
 
     mat(color diffuse, color specular, color ambient, float reflectivity, float roughness);
     mat();
+    ~mat(); // Add destructor
 
     color shade(cam c, light *ls, int lCount, hit h, geo *objs, int objCount, int recursionCount, int recursionMax);
 

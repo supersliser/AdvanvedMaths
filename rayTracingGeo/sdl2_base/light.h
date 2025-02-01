@@ -21,6 +21,7 @@ public:
 
     light(point pos, color col, float brightness);
     light();
+    ~light(); // Add destructor
 
     bool calculateShadows(hit h, geo *sphereObjs, int sphereCount);
 };

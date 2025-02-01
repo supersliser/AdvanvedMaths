@@ -37,4 +37,6 @@ class vertex : public point {
         void printVertex();
 
         point getPos();
+                ~vertex(); // Add destructor
+
 };

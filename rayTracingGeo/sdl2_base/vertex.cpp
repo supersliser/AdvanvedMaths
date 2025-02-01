@@ -38,6 +38,7 @@ void vertex::addConnection(vertex *v)
         temp[i] = this->connections[i];
     }
     temp[this->connectionCount] = v;
+    free(this->connections);
     this->connections = temp;
     this->connectionCount++;
 }
@@ -53,6 +54,7 @@ void vertex::removeConnection(vertex *v)
         }
         temp[i] = this->connections[i];
     }
+        free(this->connections);
     this->connections = temp;
     this->connectionCount--;
 }
@@ -101,6 +103,7 @@ void vertex::addFace(face *f)
         temp[i] = this->faces[i];
     }
     temp[this->faceCount] = f;
+    free(this->faces);
     this->faces = temp;
     this->faceCount++;
 }

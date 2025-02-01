@@ -1,6 +1,9 @@
 #include "cam.h"
 #include <thread>
 #include <vector>
+#include "vertex.h"
+#include <cstdlib> // for free
+#include "geo.h"
 
 cam::cam()
 {
@@ -22,6 +25,11 @@ cam::cam(point pos, vec dir, float fov, bool orthographic)
     this->orthographic = orthographic;
 }
 
+cam::~cam()
+{
+    // No dynamic memory to free in cam class
+}
+
 void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, int passCount, int importanceStart, int generationEnd, int importanceVarianceSize, bool progressive, int sampleAmount, int level)
 {
     int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
@@ -34,12 +42,16 @@ void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount,
     }
     else
     {
-        tempCamera.pos.x += x;
-        tempCamera.pos.y += y;
-        tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-        tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-        tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-        tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
     }
     color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
     for (int u = 0; u < level * pixelSize; u++)
@@ -81,7 +93,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                     float pixelScreenY = 1 - 2 * pixelNDCY;
                     tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
                     tempCamera.dir.y = pixelScreenY * fovAdjustment;
-                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir.z = this->dir.z;
                     tempCamera.dir = tempCamera.dir.Normalise();
                 }
                 tempCamera.LinearSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1);
@@ -109,12 +121,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                 }
                 else
                 {
-                    tempCamera.pos.x += x;
-                    tempCamera.pos.y += y;
-                    tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                    tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                    tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                    tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = this->dir.z;
+                    tempCamera.dir = tempCamera.dir.Normalise();
                 }
                 fflush(stdout);
                 switch (sampleType)
@@ -172,12 +188,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                     }
                     else
                     {
-                        tempCamera.pos.x += x;
-                        tempCamera.pos.y += y;
-                        tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                        tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                        tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                        tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                     }
                     color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
                     for (int u = 0; u < level * pixelSize; u++)
@@ -225,12 +245,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                         }
                         else
                         {
-                            tempCamera.pos.x += x;
-                            tempCamera.pos.y += y;
-                            tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                            tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                            tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                            tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                         }
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
                         for (int u = 0; u < level * pixelSize; u++)
@@ -258,12 +282,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                             }
                             else
                             {
-                                tempCamera.pos.x += x;
-                                tempCamera.pos.y += y;
-                                tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                                tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                                tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                                tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                             }
                         } while (!pixels[((y + maxHeight / 2) >= maxHeight ? maxHeight - 1 : y + maxHeight / 2) * maxHeight + ((x + maxWidth / 2) >= maxWidth ? maxWidth - 1 : x + maxWidth / 2)].notBlack());
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
@@ -323,12 +351,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                         }
                         else
                         {
-                            tempCamera.pos.x += x;
-                            tempCamera.pos.y += y;
-                            tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                            tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                            tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                            tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                         }
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
                         for (int u = 0; u < level * pixelSize; u++)
@@ -356,12 +388,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                             }
                             else
                             {
-                                tempCamera.pos.x += x;
-                                tempCamera.pos.y += y;
-                                tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                                tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                                tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                                tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                             }
                         } while (!isImportant(&pixels, x, y, maxWidth, maxHeight, importanceVarianceSize, level));
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
@@ -422,12 +458,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                         }
                         else
                         {
-                            tempCamera.pos.x += x;
-                            tempCamera.pos.y += y;
-                            tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                            tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                            tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                            tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                         }
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
                         for (int u = 0; u < level * pixelSize; u++)
@@ -455,12 +495,16 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
                             }
                             else
                             {
-                                tempCamera.pos.x += x;
-                                tempCamera.pos.y += y;
-                                tempCamera.dir.x = (x + tempCamera.dir.x) * (tempCamera.fov / 180);
-                                tempCamera.dir.y = (y + tempCamera.dir.y) * (tempCamera.fov / 180);
-                                tempCamera.dir.z = (500 * tempCamera.dir.z) * (tempCamera.fov / 180);
-                                tempCamera.dir.Normalise();
+                    float aspectRatio = (float)maxWidth / (float)maxHeight;
+                    float fovAdjustment = tan((tempCamera.fov / 2) * (M_PI / 180));
+                    float pixelNDCX = (x + 0.5) / maxWidth;
+                    float pixelNDCY = (y + 0.5) / maxHeight;
+                    float pixelScreenX = 2 * pixelNDCX - 1;
+                    float pixelScreenY = 1 - 2 * pixelNDCY;
+                    tempCamera.dir.x = pixelScreenX * aspectRatio * fovAdjustment;
+                    tempCamera.dir.y = pixelScreenY * fovAdjustment;
+                    tempCamera.dir.z = -1; // Assuming the camera looks towards the negative z-axis
+                    tempCamera.dir = tempCamera.dir.Normalise();
                             }
                         } while (!isImportant(&pixels, x, y, maxWidth, maxHeight, importanceVarianceSize, level));
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x + (rand() / (float)RAND_MAX) * pixelSize * level, tempCamera.pos.y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
@@ -591,21 +635,21 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
         cam tempCam = c;
         tempCam.pos.x += (float)rand() / (float)RAND_MAX;
         tempCam.pos.y += (float)rand() / (float)RAND_MAX;
-            hit h = hit();
-            h.dist = MAXFLOAT;
-            for (int i = 0; i < objCount; i++)
+        hit h = hit();
+        h.dist = MAXFLOAT;
+        for (int i = 0; i < objCount; i++)
+        {
+            int faceCount;
+            face **faces = objs[i].getFaces(&faceCount);
+            for (int j = 0; j < faceCount; j++)
             {
-                int faceCount;
-                face **faces = objs[i].getFaces(&faceCount);
-                for (int j = 0; j < faceCount; j++)
+                hit temp = objs[i].testRay(tempCam.pos, tempCam.dir, faces[j]);
+                if (temp.hitSuccess && temp.dist < h.dist)
                 {
-                    hit temp = objs[i].testRay(tempCam.pos, tempCam.dir, faces[j]);
-                    if (temp.hitSuccess && temp.dist < h.dist)
-                    {
-                        h = temp;
-                    }
+                    h = temp;
                 }
-            }        // printf("Traced objects\n");
+            }
+        }
         if (h.hitSuccess)
         {
             output[i] = h.obj->getMat()->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
@@ -647,4 +691,29 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
     }
     // printf("Returning pixel\n");
     return pixel;
+}
+
+vertex::~vertex()
+{
+    if (this->connections != nullptr)
+    {
+        free(this->connections);
+    }
+    if (this->faces != nullptr)
+    {
+        free(this->faces);
+    }
+}
+
+geo::~geo()
+{
+    if (this->vertices != nullptr)
+    {
+        for (int i = 0; i < this->vertexCount; i++)
+        {
+            delete this->vertices[i];
+        }
+        free(this->vertices);
+    }
+    delete this->m;
 }
