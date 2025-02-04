@@ -33,15 +33,15 @@ int main(int argc, char *argv[])
 	printf("SDL Initialized\n");
 	fflush(stdout);
 
-	const int samples = 2;
-	const int reflectionBounces = 1;
+	const int samples = 3;
+	const int reflectionBounces = 2;
 	const int objectCount = 100;
 	const SampleType sampleType = RANDOM_SHRINKING_PIXELS;
 	const bool progressiveRender = 1;
 	const int passes = 10000;
-	const bool trueRandom = 0;
+	const bool trueRandom = 1;
 	const int pixelSize = 1;
-	const int lightCount = 5;
+	const int lightCount = 20;
 	const int importanceStart = 200;
 	const int importanceVarianceSize = 10;
 	const int generationEnd = 40;

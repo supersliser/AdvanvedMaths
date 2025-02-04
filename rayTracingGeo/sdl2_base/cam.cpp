@@ -1,6 +1,4 @@
 #include "cam.h"
-#include <thread>
-#include <vector>
 #include "vertex.h"
 #include <cstdlib> // for free
 #include "geo.h"
@@ -153,14 +151,10 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, geo *objs, int objCount
     {
         for (int level = importanceStart; level > 0; level--)
         {
-            std::vector<std::thread> threads;
-
             printf("Starting level %d importance sample\n", level);
             for (int pass = 0; pass < passCount / level; pass++)
             {
-                threads.push_back(std::thread([=]()
-                                              { RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level); }));
-                threads.back().join();
+                RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level);
             }
             if (progressive)
             {
