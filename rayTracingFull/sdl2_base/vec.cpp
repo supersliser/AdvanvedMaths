@@ -112,3 +112,13 @@ vec vec::randomRay()
     // fflush(stdout);
     return o;
 }
+
+
+point vec::toPoint()
+{
+    point o;
+    o.x = this->x;
+    o.y = this->y;
+    o.z = this->z;
+    return o;
+}

@@ -21,5 +21,5 @@ public:
     light(point pos, color col, float brightness);
     light();
 
-    bool calculateShadows(hit h, sphere *sphereObjs, int sphereCount);
+    bool calculateShadows(hit h, sphere *sphereObjs, int sphereCount, int t);
 };

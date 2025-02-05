@@ -59,3 +59,11 @@ point point::cp(point i)
     o.z = this->z * i.z;
     return o;
 }
+
+vec point::toVec() {
+    vec o;
+    o.x = this->x;
+    o.y = this->y;
+    o.z = this->z;
+    return o;
+}

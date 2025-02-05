@@ -33,18 +33,20 @@ int main(int argc, char *argv[])
 	printf("SDL Initialized\n");
 	fflush(stdout);
 
-	const int samples = 3;
-	const int reflectionBounces = 2;
-	const int objectCount = 100;
+	const int samples = 2;
+	const int reflectionBounces = 1;
+	const int objectCount = 50;
 	const SampleType sampleType = RANDOM_SHRINKING_PIXELS;
 	const bool progressiveRender = 1;
 	const int passes = 10000;
-	const bool trueRandom = 1;
+	const bool trueRandom = 0;
 	const int pixelSize = 1;
 	const int lightCount = 20;
 	const int importanceStart = 200;
 	const int importanceVarianceSize = 10;
 	const int generationEnd = 40;
+	const int frameStart = 0;
+	const int frameEnd = 30;
 
 	if (trueRandom)
 	{
@@ -92,9 +94,8 @@ int main(int argc, char *argv[])
 	if (!trueRandom)
 	{
 		objs[0] = sphere();
-		objs[0].pos.x = 0;
-		objs[0].pos.y = 0;
-		objs[0].pos.z = 0;
+		objs[0].addKeyframe(0, point(0, 0, 0));
+		objs[0].addKeyframe(30, point(0, 0, -500));
 		objs[0].m = new mat();
 		objs[0].m->ambient.r = 0;
 		objs[0].m->ambient.g = 0;
@@ -110,9 +111,8 @@ int main(int argc, char *argv[])
 		objs[0].r = 100;
 		objs[0].id = 0;
 		objs[1] = sphere();
-		objs[1].pos.x = -500;
-		objs[1].pos.y = 0;
-		objs[1].pos.z = -50;
+		objs[1].addKeyframe(0, point(-50, 0, -500));
+		objs[1].addKeyframe(30, point(50, 0, -500));
 		objs[1].m = new mat();
 		objs[1].m->ambient.r = 0.5;
 		objs[1].m->ambient.g = 0.5;
@@ -132,9 +132,8 @@ int main(int argc, char *argv[])
 	for (int i = (trueRandom ? 2 : 0); i < objectCount; i++)
 	{
 		objs[i] = sphere();
-		objs[i].pos.x = (rand() % 1000) - 500;
-		objs[i].pos.y = (rand() % 1000) - 500;
-		objs[i].pos.z = (rand() % 200);
+		objs[i].addKeyframe(0, point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200)));
+		objs[i].addKeyframe(30, point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200)));
 		objs[i].m = new mat();
 		objs[i].m->ambient.r = 0;
 		objs[i].m->ambient.g = 0;
@@ -149,7 +148,8 @@ int main(int argc, char *argv[])
 		// printf("draw %d object\n", i + 1);
 	}
 	printf("Objects Generated\n");
-	c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd, importanceVarianceSize);
+	// c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd, importanceVarianceSize, 0);
+	c->renderFrames(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd, importanceVarianceSize, frameStart, frameEnd);
 	char finished = 0;
 	// the main event loop
 	while (!finished)
@@ -162,41 +162,10 @@ int main(int argc, char *argv[])
 			case SDL_KEYDOWN:
 				switch (event.key.keysym.sym)
 				{
-				case SDLK_w:
-					c->pos.z += MOVE * c->dir.z;
-					break;
-				case SDLK_s:
-					c->pos.z -= MOVE * c->dir.z;
-					break;
-				case SDLK_d:
-					c->pos.x += MOVE * c->dir.z;
-					break;
-				case SDLK_a:
-					c->pos.x -= MOVE * c->dir.z;
-					break;
-				case SDLK_SPACE:
-					c->pos.y -= MOVE * c->dir.z;
-					break;
-				case SDLK_LSHIFT:
-					c->pos.y += MOVE * c->dir.z;
-					break;
 				case SDLK_ESCAPE:
 					finished = 1;
 					break;
-				case SDLK_LEFTBRACKET:
-					c->fov -= 10;
-					break;
-				case SDLK_RIGHTBRACKET:
-					c->fov += 10;
-					break;
-				case SDLK_p:
-					c->orthographic = !c->orthographic;
-					break;
 				}
-				c->printCam();
-				c->draw(ren, ls, lightCount, objs, objectCount, 1000, 1000, samples, reflectionBounces, progressiveRender, sampleType, passes, pixelSize, importanceStart, generationEnd, importanceVarianceSize);
-				break;
-
 			case SDL_QUIT:
 				finished = 1;
 				break;

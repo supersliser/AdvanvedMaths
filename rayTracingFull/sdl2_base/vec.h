@@ -1,4 +1,7 @@
 #pragma once
+#include "point.h"
+
+class point;
 
 class vec {
     public:
@@ -24,4 +27,6 @@ class vec {
         float length();
 
         vec randomRay();
+
+        point toPoint();
 };

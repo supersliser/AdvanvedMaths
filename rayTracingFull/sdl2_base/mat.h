@@ -26,9 +26,9 @@ public:
     mat(color diffuse, color specular, color ambient, float reflectivity, float roughness);
     mat();
 
-    color shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax);
+    color shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax, int t);
 
-    color reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light* ls, int lCount, int recursionCount, int recursionMax);
+    color reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light* ls, int lCount, int recursionCount, int recursionMax, int t);
 
     void logMat();
 };

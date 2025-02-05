@@ -21,4 +21,6 @@ class point {
         float dp(vec i);
         point cp(point i);
 
+        vec toVec();
+
 };

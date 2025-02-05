@@ -17,12 +17,12 @@ light::light() {
     this->brightness = 0;
 }
 
-bool light::calculateShadows(hit h, sphere *sphereObjs, int sphereCount) {
+bool light::calculateShadows(hit h, sphere *sphereObjs, int sphereCount, int t) {
     vec lDir;
     lDir = this->pos.sub(h.P);
     lDir = lDir.Normalise();
     for (int i = 0; i < sphereCount; i++) {
-        hit temp = sphereObjs[i].traceObj(h.P, lDir);
+        hit temp = sphereObjs[i].traceObj(h.P, lDir, t);
         if (temp.hitSuccess && temp.dist < h.dist && temp.obj->id != h.obj->id) {
             return 1;
         }

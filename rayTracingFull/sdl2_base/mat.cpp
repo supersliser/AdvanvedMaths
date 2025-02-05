@@ -25,7 +25,7 @@ mat::mat(color diffuse, color specular, color ambient, float reflectivity, float
     this->roughness = roughness;
 }
 
-color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax)
+color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount, int recursionCount, int recursionMax, int t)
 {
     // diffusion
     color finalDiffuse;
@@ -37,7 +37,7 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
         lDir.y = ls[i].pos.y - h.P.y;
         lDir.z = ls[i].pos.z - h.P.z;
         lDir = lDir.Normalise();
-        float diff = lDir.dp(h.obj->getNormal(h.P));
+        float diff = lDir.dp(h.obj->getNormal(h.P, t));
         if (diff < 0.0f)
         {
             diff = 0.0f;
@@ -71,7 +71,7 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
         H.y = (c.dir.y + lDir.y) / 2;
         H.z = (c.dir.z + lDir.z) / 2;
         H = H.Normalise();
-        float spec = H.dp(h.obj->getNormal(h.P));
+        float spec = H.dp(h.obj->getNormal(h.P, t));
         spec = pow(spec, 1 / this->roughness);
         if (spec < 0.0f)
         {
@@ -107,16 +107,16 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
 
     // reflection
     color reflection;
-    reflection.r = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax).r;
-    reflection.g = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax).g;
-    reflection.b = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax).b;
+    reflection.r = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P, t), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax, t).r;
+    reflection.g = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P, t), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax, t).g;
+    reflection.b = reflectivity * reflect(*h.obj, h.P, h.obj->getNormal(h.P, t), c.dir, objs, objCount, ls, lCount, recursionCount, recursionMax, t).b;
     // printf("%f, %f, %f\n", reflection.r, reflection.g, reflection.b);
 
     // shadow
     bool shadows[lCount];
     for (int i = 0; i < lCount; i++)
     {
-        shadows[i] = ls[i].calculateShadows(h, objs, objCount);
+        shadows[i] = ls[i].calculateShadows(h, objs, objCount, t);
     }
     float shadow = lCount;
     for (int i = 0; i < lCount; i++)
@@ -141,14 +141,14 @@ color mat::shade(cam c, light *ls, int lCount, hit h, sphere *objs, int objCount
     return output;
 }
 
-color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light *ls, int lCount, int recursionCount, int recursionMax)
+color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int objCount, light *ls, int lCount, int recursionCount, int recursionMax, int t)
 {
     vec r;
     r.x = i.x - 2 * (i.dp(normal) * normal.x);
     r.y = i.y - 2 * (i.dp(normal) * normal.y);
     r.z = i.z - 2 * (i.dp(normal) * normal.z);
 
-    hit h = cam().TraceObjs(cam(p, r, 1, false), objs, objCount);
+    hit h = cam().TraceObjs(cam(p, r, 1, false), objs, objCount, t);
 
     if (h.hitSuccess)
     {
@@ -159,7 +159,7 @@ color mat::reflect(sphere current, point p, vec normal, vec i, sphere *objs, int
         if (recursionCount < recursionMax)
         {
             // printf("recursion\n");
-            color temp = h.obj->m->shade(c, ls, lCount, h, objs, objCount, recursionCount + 1, recursionMax);
+            color temp = h.obj->m->shade(c, ls, lCount, h, objs, objCount, recursionCount + 1, recursionMax, t);
             return temp;
         }
     }

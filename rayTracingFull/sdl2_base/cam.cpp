@@ -20,7 +20,21 @@ cam::cam(point pos, vec dir, float fov, bool orthographic)
     this->orthographic = orthographic;
 }
 
-void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, int passCount, int importanceStart, int generationEnd, int importanceVarianceSize, bool progressive, int sampleAmount, int level)
+void cam::renderFrames(SDL_Renderer *ren, light *l, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd, int importanceVarianceSize, int start, int end)
+{
+    for (int i = start; i < end; i++)
+    {
+        char frameName[100];
+        sprintf(frameName, "frame%d.bmp", i);
+        this->draw(ren, l, lCount, objs, objCount, maxWidth, maxHeight, sampleAmount, recursionMax, progressive, sampleType, passCount, pixelSize, importanceStart, generationEnd, importanceVarianceSize, i);
+        SDL_Surface *sectionSurface = SDL_CreateRGBSurface(0, 1000, 1000, 32, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff);
+        SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_RGBA8888, sectionSurface->pixels, sectionSurface->pitch);
+        SDL_SaveBMP(sectionSurface, frameName);
+        SDL_FreeSurface(sectionSurface);
+    }
+}
+
+void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, int passCount, int importanceStart, int generationEnd, int importanceVarianceSize, bool progressive, int sampleAmount, int level, int t)
 {
     int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
     int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
@@ -44,7 +58,7 @@ void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount,
     // printf("%d\n", maxWidth * maxHeight);
     // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
     // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
-    color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+    color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
     // printf("Sampled successfully, applying sample to array\n");
     for (int u = 0; u < level * pixelSize; u++)
     {
@@ -56,7 +70,7 @@ void cam::RandomShrinkingPixels(SDL_Renderer *ren, cam c, light *ls, int lCount,
     }
 }
 
-void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd, int importanceVarianceSize)
+void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, float sampleAmount, int recursionMax, bool progressive, SampleType sampleType, int passCount, int pixelSize, int importanceStart, int generationEnd, int importanceVarianceSize, int t)
 {
     printf("Starting Draw\n");
     fflush(stdout);
@@ -88,7 +102,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                 {
                 case LINEAR:
                 default:
-                    tempCamera.LinearSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1);
+                    tempCamera.LinearSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1, t);
                     break;
                 }
                 // printf("Sampled (%d, %d)\n", x, y);
@@ -130,7 +144,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                 case RANDOM:
                 default:
                     // tempCamera.printCam();
-                    tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1);
+                    tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, pixelSize, 1, t);
                     break;
                 }
             }
@@ -155,7 +169,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                 //                               { RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level); }));
                 // threads.back().join();
 
-                RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level);
+                RandomShrinkingPixels(ren, *this, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, pixelSize, passCount, importanceStart, generationEnd, importanceVarianceSize, progressive, sampleAmount, level, t);
             }
             if (progressive)
             {
@@ -195,7 +209,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                     // printf("%d\n", maxWidth * maxHeight);
                     // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
                     // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
-                    color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                    color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                     // printf("Sampled successfully, applying sample to array\n");
                     for (int u = 0; u < level * pixelSize; u++)
                     {
@@ -227,8 +241,10 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
         for (int level = importanceStart; level > 0; level--)
         {
             printf("Starting level %d importance sample\n", level);
-            for (int pass = 0; pass < passCount / level; pass++)
             {
+                int x = (rand() / (float)RAND_MAX) * maxWidth - maxWidth / 2;
+                int y = (rand() / (float)RAND_MAX) * maxHeight - maxHeight / 2;
+                // printf("Starting sample at (%d, %d)\n", x, y);
                 for (int ray = 0; ray < maxWidth / level; ray++)
                 {
                     if (level >= generationEnd)
@@ -255,7 +271,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                         // printf("%d\n", maxWidth * maxHeight);
                         // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
                         // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
-                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         // printf("Sampled successfully, applying sample to array\n");
                         for (int u = 0; u < level * pixelSize; u++)
                         {
@@ -298,7 +314,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                             // printf("Pixel color (%f, %f, %f) at (%d, %d)\n", pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].r, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].g, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].b, x + 500, y + 500);
                         } while (!pixels[((y + maxHeight / 2) >= maxHeight ? maxHeight - 1 : y + maxHeight / 2) * maxHeight + ((x + maxWidth / 2) >= maxWidth ? maxWidth - 1 : x + maxWidth / 2)].notBlack());
                         // printf("Found not black\n");
-                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         for (int u = 0; u < level * pixelSize; u++)
                         {
                             for (int v = 0; v < level * pixelSize; v++)
@@ -368,7 +384,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                         // printf("%d\n", maxWidth * maxHeight);
                         // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
                         // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
-                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x, y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         // printf("Sampled successfully, applying sample to array\n");
                         for (int u = 0; u < level * pixelSize; u++)
                         {
@@ -411,7 +427,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                             // printf("Pixel color (%f, %f, %f) at (%d, %d)\n", pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].r, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].g, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].b, x + 500, y + 500);
                         } while (!isImportant(&pixels, x, y, maxWidth, maxHeight, importanceVarianceSize, level));
                         // printf("Found not black\n");
-                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x, tempCamera.pos.y, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         for (int u = 0; u < level * pixelSize; u++)
                         {
                             for (int v = 0; v < level * pixelSize; v++)
@@ -482,7 +498,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                         // printf("%d\n", maxWidth * maxHeight);
                         // printf("%d\n", (((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5);
                         // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
-                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         // printf("Sampled successfully, applying sample to array\n");
                         for (int u = 0; u < level * pixelSize; u++)
                         {
@@ -525,7 +541,7 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                             // printf("Pixel color (%f, %f, %f) at (%d, %d)\n", pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].r, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].g, pixels[(int)floor((tempCamera.pos.x + 500) * maxWidth + (tempCamera.pos.y + 500))].b, x + 500, y + 500);
                         } while (!isImportant(&pixels, x, y, maxWidth, maxHeight, importanceVarianceSize, level));
                         // printf("Found not black\n");
-                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x + (rand() / (float)RAND_MAX) * pixelSize * level, tempCamera.pos.y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0);
+                        color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, tempCamera.pos.x + (rand() / (float)RAND_MAX) * pixelSize * level, tempCamera.pos.y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         for (int u = 0; u < level * pixelSize; u++)
                         {
                             for (int v = 0; v < level * pixelSize; v++)
@@ -575,7 +591,7 @@ bool cam::isImportant(color **pixels, int x, int y, int maxWidth, int maxHeight,
     return false;
 }
 
-color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool draw)
+color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool draw, int t)
 {
     // printf("Sampling (%d, %d)\n", x, y);
     color pixel = color();
@@ -587,13 +603,13 @@ color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere 
             cam tempCam = c;
             tempCam.pos.x += u;
             tempCam.pos.y += v;
-            hit h = TraceObjs(tempCam, objs, objCount);
+            hit h = TraceObjs(tempCam, objs, objCount, t);
             // printf("Sampling (%f, %f)\n", x, y);
             if (h.hitSuccess)
             {
                 // printf("Hit success at (%f, %f)\n", h->P.x, h->P.y);
                 // fflush(stdout);
-                color temp = h.obj->m->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
+                color temp = h.obj->m->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax, t);
                 pixel.r += temp.r;
                 pixel.g += temp.g;
                 pixel.b += temp.b;
@@ -634,7 +650,7 @@ void cam::printCam()
     fflush(stdout);
 }
 
-color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool drawHere)
+color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool drawHere, int t)
 {
     color output[(int)sampleAmount];
     for (int i = 0; i < sampleAmount; i++)
@@ -642,11 +658,11 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere 
         cam tempCam = c;
         tempCam.pos.x += (float)rand() / (float)RAND_MAX;
         tempCam.pos.y += (float)rand() / (float)RAND_MAX;
-        hit h = TraceObjs(tempCam, objs, objCount);
+        hit h = TraceObjs(tempCam, objs, objCount, t);
         // printf("Traced objects\n");
         if (h.hitSuccess)
         {
-            output[i] = h.obj->m->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
+            output[i] = h.obj->m->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax, t);
             // printf("shaded object\n");
         }
         else
@@ -687,61 +703,14 @@ color cam::RandomSample(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere 
     return pixel;
 }
 
-void cam::PathTracePixel(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize)
-{
-    // printf("Starting Path Trace\n");
-    // fflush(stdout);
-    for (int i = 0; i < 1000; i++)
-    {
-        cam tempcam = c;
-        tempcam.pos.x += (float)rand() / (float)RAND_MAX;
-        tempcam.pos.y += (float)rand() / (float)RAND_MAX;
-        tempcam.dir = tempcam.dir.randomRay();
-        tempcam.dir.Normalise();
-        color output = PathTrace(ren, tempcam, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, 0);
-        // printf("Drawing Colour (%f, %f, %f) at (%f, %f)\n", output.r, output.g, output.b, x, y);
-        // fflush(stdout);
-        SDL_SetRenderDrawColor(ren, output.r * 255, output.g * 255, output.b * 255, 255);
-        for (int i = 0; i < pixelSize; i++)
-        {
-            for (int j = 0; j < pixelSize; j++)
-            {
-                SDL_RenderDrawPoint(ren, x + i + (maxWidth / 2), y + j + (maxHeight / 2));
-            }
-        }
-    }
-}
-
-color cam::PathTrace(SDL_Renderer *ren, cam c, light *ls, int lCount, sphere *objs, int objCount, int maxWidth, int maxHeight, int recursionMax, int recursionCount)
-{
-    // printf("Tracing Path\n");
-    // fflush(stdout);
-    hit h = TraceObjs(c, objs, objCount);
-    c.dir = c.dir.randomRay();
-    if (!h.hitSuccess)
-    {
-        return color(0, 0, 0);
-    }
-    color output = h.obj->m->shade(c, ls, lCount, h, objs, objCount, 0, -1);
-    // printf("Tracing Shaded\n");
-    // fflush(stdout);
-    if (recursionCount < recursionMax)
-    {
-        output.toCol(output.toVec().mult(PathTrace(ren, c, ls, lCount, objs, objCount, maxWidth, maxHeight, recursionMax, recursionCount + 1).toVec()));
-    }
-    // printf("Path Traced\n");
-    // fflush(stdout);
-    return output;
-}
-
-hit cam::TraceObjs(cam c, sphere *objs, int objCount)
+hit cam::TraceObjs(cam c, sphere *objs, int objCount, int t)
 {
     hit bestHit;
     bestHit.dist = 100000000000000;
     // printf("%d\n", objCount);
     for (int i = 0; i < objCount; i++)
     {
-        hit h = objs[i].traceObj(c.pos, c.dir);
+        hit h = objs[i].traceObj(c.pos, c.dir, t);
         if (h.hitSuccess && h.dist < bestHit.dist)
         {
             bestHit = h;
