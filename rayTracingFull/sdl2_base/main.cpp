@@ -39,9 +39,9 @@ int main(int argc, char *argv[])
 	const SampleType sampleType = RANDOM_SHRINKING_PIXELS;
 	const bool progressiveRender = 1;
 	const int passes = 10000;
-	const bool trueRandom = 0;
+	const bool trueRandom = 1;
 	const int pixelSize = 1;
-	const int lightCount = 20;
+	const int lightCount = 10;
 	const int importanceStart = 200;
 	const int importanceVarianceSize = 10;
 	const int generationEnd = 40;
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 		srandom(time(NULL));
 	}
 
-	const int MOVE = 10;
+	const int MOVE = 100;
 	cam *c = new cam(point(0, 0, -100), vec(0, 0, 1), 70, 1);
 	// c->pos.x = 0;
 	// c->pos.y = 0;
@@ -132,8 +132,12 @@ int main(int argc, char *argv[])
 	for (int i = (trueRandom ? 2 : 0); i < objectCount; i++)
 	{
 		objs[i] = sphere();
-		objs[i].addKeyframe(0, point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200)));
-		objs[i].addKeyframe(30, point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200)));
+		point temp = point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200));
+		objs[i].addKeyframe(0, temp);
+		temp.x += (rand() % MOVE) - MOVE / 2;
+		temp.y += (rand() % MOVE) - MOVE / 2;
+		temp.z += (rand() % MOVE) - MOVE / 2;
+		objs[i].addKeyframe(30, temp);
 		objs[i].m = new mat();
 		objs[i].m->ambient.r = 0;
 		objs[i].m->ambient.g = 0;

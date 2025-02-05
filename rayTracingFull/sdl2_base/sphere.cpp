@@ -76,7 +76,7 @@ vec sphere::getNormal(point P, int t)
 
 point sphere::getPos(int t)
 {
-	//this function should return the keyframe if it exists, otherwise it should return an interpolation between the two closest keyframes
+	//this function should return the keyframe if it exists, otherwise it should return an interpolation between the two keyframes
 	if (keyframeCount == 1)
 	{
 		return pos[0];
@@ -90,13 +90,16 @@ point sphere::getPos(int t)
 		}
 		if (this->t[i] == t)
 		{
-			// printf("keyframe found, (%f, %f, %f)\n", pos[i].x, pos[i].y, pos[i].z);
 			return pos[i];
 		}
 		else
 		{
-			float x = (t - this->t[i - 1]) / (this->t[i] - this->t[i - 1]);
-			return pos[i - 1].add(pos[i].sub(pos[i - 1]).mult(point(x, x, x).toVec()).toPoint());
+			float x = t - this->t[i - 1] / this->t[i] - this->t[i - 1];
+			point out;
+			out.x = pos[i - 1].x + x * (pos[i].x - pos[i - 1].x);
+			out.y = pos[i - 1].y + x * (pos[i].y - pos[i - 1].y);
+			out.z = pos[i - 1].z + x * (pos[i].z - pos[i - 1].z);
+			return out;
 		}
 	}
 }
