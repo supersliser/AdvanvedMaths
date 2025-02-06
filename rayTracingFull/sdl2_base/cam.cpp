@@ -158,11 +158,12 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
         break;
     case RANDOM_SHRINKING_PIXELS:
     {
-        for (int level = importanceStart; level > 0; level--)
+        for (int level = importanceStart; level > 0; level-=importanceVarianceSize)
         {
             // std::vector<std::thread> threads;
-
-            printf("Starting level %d importance sample\n", level);
+            if (level % 5 == 0 || level < 5) {
+            printf("Starting level %d importance sample for frame %d\n", level, t);
+            }
             for (int pass = 0; pass < passCount / level; pass++)
             {
                 // threads.push_back(std::thread([=]()
@@ -500,12 +501,12 @@ void cam::draw(SDL_Renderer *ren, light *ls, int lCount, sphere *objs, int objCo
                         // pixels[(((y + maxHeight / 2) + 5) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + 5) * maxHeight + (x + maxWidth / 2) + 5].print();
                         color temp = tempCamera.RandomSample(ren, tempCamera, ls, lCount, objs, objCount, x + (rand() / (float)RAND_MAX) * pixelSize * level, y + (rand() / (float)RAND_MAX) * pixelSize * level, sampleAmount, maxWidth, maxHeight, recursionMax, level * pixelSize, 0, t);
                         // printf("Sampled successfully, applying sample to array\n");
-                        for (int u = 0; u < level * pixelSize; u++)
+                        for (int u = x; u < x + level * pixelSize; u+1 >= maxWidth ? u = maxWidth - 1 : u++)
                         {
-                            for (int v = 0; v < level * pixelSize; v++)
+                            for (int v = y; v < y + level * pixelSize; v+1 >= maxHeight ? v = maxHeight - 1 : v++)
                             {
                                 // printf("%d\n", (((y + maxHeight / 2) + v) > maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (x + maxWidth / 2) + u);
-                                pixels[(((y + maxHeight / 2) + v) >= maxHeight ? maxHeight - 1 : (y + maxHeight / 2) + v) * maxHeight + (((x + maxWidth / 2) + u) >= maxWidth ? maxWidth - 1 : (x + maxWidth / 2) + u)] = temp;
+                                pixels[y * maxHeight + x] = temp;
                             }
                         }
 

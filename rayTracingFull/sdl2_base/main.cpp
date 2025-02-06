@@ -38,23 +38,23 @@ int main(int argc, char *argv[])
 	const int objectCount = 50;
 	const SampleType sampleType = RANDOM_SHRINKING_PIXELS;
 	const bool progressiveRender = 1;
-	const int passes = 10000;
+	const int passes = 25000;
 	const bool trueRandom = 1;
 	const int pixelSize = 1;
-	const int lightCount = 10;
+	const int lightCount = 20;
 	const int importanceStart = 200;
-	const int importanceVarianceSize = 10;
+	const int importanceVarianceSize = 1;
 	const int generationEnd = 40;
 	const int frameStart = 0;
-	const int frameEnd = 30;
+	const int frameEnd = 250;
+	const int MOVE = 20;
 
 	if (trueRandom)
 	{
 		srandom(time(NULL));
 	}
 
-	const int MOVE = 100;
-	cam *c = new cam(point(0, 0, -100), vec(0, 0, 1), 70, 1);
+	cam *c = new cam(point(0, 0, -200), vec(0, 0, 1), 70, 1);
 	// c->pos.x = 0;
 	// c->pos.y = 0;
 	// c->pos.z = -100;
@@ -82,9 +82,9 @@ int main(int argc, char *argv[])
 		ls[i].col.r = 1;
 		ls[i].col.g = 1;
 		ls[i].col.b = 1;
-		ls[i].pos.x = random() / (double)RAND_MAX * 200000 - 100000;
-		ls[i].pos.y = random() / (double)RAND_MAX * 200000 - 100000;
-		ls[i].pos.z = random() / (double)RAND_MAX * 200000 - 100000;
+		ls[i].pos.x = random() % 200 - 100;
+		ls[i].pos.y = random() % 200 - 100;
+		ls[i].pos.z = random() % 200 - 100;
 	}
 
 	printf("Light Generated\n");
@@ -94,8 +94,8 @@ int main(int argc, char *argv[])
 	if (!trueRandom)
 	{
 		objs[0] = sphere();
-		objs[0].addKeyframe(0, point(0, 0, 0));
-		objs[0].addKeyframe(30, point(0, 0, -500));
+		objs[0].addKeyframe(frameStart, point(0, 0, 0));
+		objs[0].addKeyframe(frameEnd, point(0, 0, -500));
 		objs[0].m = new mat();
 		objs[0].m->ambient.r = 0;
 		objs[0].m->ambient.g = 0;
@@ -111,12 +111,12 @@ int main(int argc, char *argv[])
 		objs[0].r = 100;
 		objs[0].id = 0;
 		objs[1] = sphere();
-		objs[1].addKeyframe(0, point(-50, 0, -500));
-		objs[1].addKeyframe(30, point(50, 0, -500));
+		objs[1].addKeyframe(frameStart, point(-50, 0, -500));
+		objs[1].addKeyframe(frameEnd, point(50, 0, -500));
 		objs[1].m = new mat();
-		objs[1].m->ambient.r = 0.5;
-		objs[1].m->ambient.g = 0.5;
-		objs[1].m->ambient.b = 0.5;
+		objs[1].m->ambient.r = 0.2;
+		objs[1].m->ambient.g = 0.2;
+		objs[1].m->ambient.b = 0.2;
 		objs[1].m->diffuse.r = 1;
 		objs[1].m->diffuse.g = 0;
 		objs[1].m->diffuse.b = 1;
@@ -133,11 +133,11 @@ int main(int argc, char *argv[])
 	{
 		objs[i] = sphere();
 		point temp = point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200));
-		objs[i].addKeyframe(0, temp);
-		temp.x += (rand() % MOVE) - MOVE / 2;
-		temp.y += (rand() % MOVE) - MOVE / 2;
-		temp.z += (rand() % MOVE) - MOVE / 2;
-		objs[i].addKeyframe(30, temp);
+		objs[i].addKeyframe(frameStart, temp);
+		temp.x += (rand() % 2 == 1 ? 1 : -1) * (rand() % MOVE);
+		temp.y += (rand() % 2 == 1 ? 1 : -1) * (rand() % MOVE);
+		temp.z += rand() % MOVE;
+		objs[i].addKeyframe(frameEnd, temp);
 		objs[i].m = new mat();
 		objs[i].m->ambient.r = 0;
 		objs[i].m->ambient.g = 0;
@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 		objs[i].m->specular = col.randColor();
 		objs[i].m->roughness = (float)rand() / RAND_MAX;
 		objs[i].m->reflectivity = (float)rand() / RAND_MAX;
-		objs[i].r = (rand() % 130) + 20;
+		objs[i].r = (rand() % 90) + 10;
 		objs[i].id = i;
 		// printf("(%f, %f, %f)\n", objs[i].col.r, objs[i].col.g, objs[i].col.b);
 		// printf("draw %d object\n", i + 1);
