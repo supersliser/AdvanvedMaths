@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	const int importanceVarianceSize = 1;
 	const int generationEnd = 40;
 	const int frameStart = 0;
-	const int frameEnd = 250;
+	const int frameEnd = 1;
 	const int MOVE = 20;
 
 	if (trueRandom)
