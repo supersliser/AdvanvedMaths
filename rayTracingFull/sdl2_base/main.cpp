@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	const int importanceVarianceSize = 1;
 	const int generationEnd = 40;
 	const int frameStart = 0;
-	const int frameEnd = 1;
+	const int frameEnd = 120;
 	const int MOVE = 20;
 
 	if (trueRandom)
@@ -68,13 +68,13 @@ int main(int argc, char *argv[])
 	printf("Cam Generated\n");
 	light ls[lightCount];
 
-		ls[0].brightness = 99999999999;
-		ls[0].col.r = 1;
-		ls[0].col.g = 1;
-		ls[0].col.b = 1;
-		ls[0].pos.x = 0;
-		ls[0].pos.y = 0;
-		ls[0].pos.z = 0;
+	ls[0].brightness = 99999999999;
+	ls[0].col.r = 1;
+	ls[0].col.g = 1;
+	ls[0].col.b = 1;
+	ls[0].pos.x = 0;
+	ls[0].pos.y = 0;
+	ls[0].pos.z = 0;
 
 	for (int i = 1; i < lightCount; i++)
 	{
@@ -134,10 +134,16 @@ int main(int argc, char *argv[])
 		objs[i] = sphere();
 		point temp = point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200));
 		objs[i].addKeyframe(frameStart, temp);
-		temp.x += (rand() % 2 == 1 ? 1 : -1) * (rand() % MOVE);
-		temp.y += (rand() % 2 == 1 ? 1 : -1) * (rand() % MOVE);
-		temp.z += rand() % MOVE;
+		temp.x += (rand() % MOVE) - MOVE / 2;
+		temp.y += (rand() % MOVE) - MOVE / 2;
+		temp.z += -(rand() % MOVE);
 		objs[i].addKeyframe(frameEnd, temp);
+		int keyframes = rand() % 10;
+		for (int i = 0; i < keyframes; i++)
+		{
+			point temp = point((rand() % 1000) - 500, (rand() % 1000) - 500, (rand() % 200));
+			objs[i].addKeyframe(rand() % frameEnd, temp);
+		}
 		objs[i].m = new mat();
 		objs[i].m->ambient.r = 0;
 		objs[i].m->ambient.g = 0;

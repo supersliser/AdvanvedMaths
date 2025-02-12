@@ -110,10 +110,7 @@ hit geo::testRay(point p, vec v, face *face)
     point p1 = v1->getPos();
     point p2 = v2->getPos();
 
-    // Calculate normal of the face
-    vec edge1 = p1.sub(p0);
-    vec edge2 = p2.sub(p0);
-    vec normal = edge1.cp(edge2).Normalise();
+    vec normal = face->calculateNormal();
 
     // Calculate intersection
     float d = normal.dp(p0.toVec());

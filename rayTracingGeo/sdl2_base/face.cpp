@@ -28,9 +28,14 @@ face::face(vertex *v1, vertex *v2, vertex *v3)
 // }
 
 vec face::calculateNormal() {
+    if (this->normal.x != 0 || this->normal.y != 0 || this->normal.z != 0)
+    {
+        return this->normal;
+    }
     vec v1 = this->vertices[1]->getPos().sub(this->vertices[0]->getPos());
     vec v2 = this->vertices[2]->getPos().sub(this->vertices[0]->getPos());
-    return v1.cp(v2).Normalise();
+    this->normal = v1.cp(v2).Normalise();
+    return this->normal;
 }
 
 int face::getVertexCount()

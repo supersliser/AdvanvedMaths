@@ -554,43 +554,46 @@ bool cam::isImportant(color **pixels, int x, int y, int maxWidth, int maxHeight,
 color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *objs, int objCount, int x, int y, float sampleAmount, int maxWidth, int maxHeight, int recursionMax, int pixelSize, bool draw)
 {
     color pixel = color();
-
-    for (float u = 0.0; u < pixelSize; u += (1 / sampleAmount) * pixelSize)
+    for (int i = 0; i < objCount; i++)
     {
-        for (float v = 0.0; v < pixelSize; v += (1 / sampleAmount) * pixelSize)
+        int faceCount;
+        face **faces = objs[i].getFaces(&faceCount);
+        for (float u = 0.0; u < pixelSize; u += (1 / sampleAmount) * pixelSize)
         {
-            cam tempCam = c;
-            tempCam.pos.x += u;
-            tempCam.pos.y += v;
-            hit h = hit();
-            h.dist = MAXFLOAT;
-            for (int i = 0; i < objCount; i++)
+            for (float v = 0.0; v < pixelSize; v += (1 / sampleAmount) * pixelSize)
             {
-                int faceCount;
-                face **faces = objs[i].getFaces(&faceCount);
-                for (int j = 0; j < faceCount; j++)
-                {
-                    hit temp = objs[i].testRay(tempCam.pos, tempCam.dir, faces[j]);
-                    if (temp.hitSuccess && temp.dist < h.dist)
+                cam tempCam = c;
+                tempCam.pos.x += u;
+                tempCam.pos.y += v;
+                hit h = hit();
+                h.dist = MAXFLOAT;
+                    for (int j = 0; j < faceCount; j++)
                     {
-                        h = temp;
+                        if (faces[j]->calculateNormal().dp(tempCam.dir) > 0)
+                        {
+                            continue;
+                        }
+                        hit temp = objs[i].testRay(tempCam.pos, tempCam.dir, faces[j]);
+                        if (temp.hitSuccess && temp.dist < h.dist)
+                        {
+                            h = temp;
+                        }
                     }
+                if (h.hitSuccess)
+                {
+                    color temp = h.obj->getMat()->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
+                    pixel.r += temp.r;
+                    pixel.g += temp.g;
+                    pixel.b += temp.b;
+                }
+                else
+                {
+                    pixel.r += 0;
+                    pixel.g += 0;
+                    pixel.b += 0;
                 }
             }
-            if (h.hitSuccess)
-            {
-                color temp = h.obj->getMat()->shade(tempCam, ls, lCount, h, objs, objCount, 0, recursionMax);
-                pixel.r += temp.r;
-                pixel.g += temp.g;
-                pixel.b += temp.b;
-            }
-            else
-            {
-                pixel.r += 0;
-                pixel.g += 0;
-                pixel.b += 0;
-            }
-        }
+    }
     }
     pixel.r = pixel.r / (sampleAmount * sampleAmount);
     pixel.g = pixel.g / (sampleAmount * sampleAmount);
@@ -601,6 +604,8 @@ color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
     // fflush(stdout);
     if (draw)
     {
+        if (pixel.r != 0 || pixel.g != 0 || pixel.b != 0)
+        {
         SDL_SetRenderDrawColor(ren, pixel.r * 255, pixel.g * 255, pixel.b * 255, 255);
         for (int i = 0; i < pixelSize; i++)
         {
@@ -608,6 +613,7 @@ color cam::LinearSample(SDL_Renderer *ren, cam c, light *ls, int lCount, geo *ob
             {
                 SDL_RenderDrawPoint(ren, x + i + (maxWidth / 2), y + j + (maxHeight / 2));
             }
+        }
         }
     }
     return pixel;
